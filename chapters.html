@@ -18,29 +18,33 @@ permalink: /docs/00-index/
 
 <section class="section">
   <div class="container container-prose">
-    {%- assign parts_sorted = site.parts | sort: "order" -%}
-    {%- for part in parts_sorted -%}
-      {%- assign part_chapters = site.docs | where: "part", part.part_name | sort: "order" -%}
+    {%- for catalog_part in site.data.catalog.parts -%}
+      {%- assign site_part = site.parts | where: "part_name", catalog_part.name | first -%}
       <h2 class="section-heading">
-        <span class="chip chip--accent">{{ part.label | default: part.title }}</span>
-        {{ part.title }}
+        <span class="chip chip--accent">{{ site_part.label | default: catalog_part.name }}</span>
+        {{ catalog_part.name }}
       </h2>
-      {%- if part.blurb -%}<p class="section-sub">{{ part.blurb }}</p>{%- endif -%}
-      {%- if part_chapters.size > 0 -%}
+      {%- if site_part.blurb -%}<p class="section-sub">{{ site_part.blurb }}</p>{%- endif -%}
       <ol class="toc-list">
-        {%- for doc in part_chapters -%}
+        {%- for chapter in catalog_part.chapters -%}
+        {%- assign doc = site.docs | where: "order", chapter.number | first -%}
         <li>
+          {%- if doc -%}
           <a href="{{ doc.url | relative_url }}">
-            <span class="toc-list__num">{{ doc.marker | default: doc.order }}</span>
-            <span>{{ doc.title }}</span>
+            <span class="toc-list__num">{{ chapter.number }}</span>
+            <span>{{ chapter.title }}</span>
           </a>
-          {%- if doc.description -%}<small>{{ doc.description }}</small>{%- endif -%}
+          {%- else -%}
+          <span class="toc-list__row">
+            <span class="toc-list__num">{{ chapter.number }}</span>
+            <span>{{ chapter.title }}</span>
+            <span class="status">Coming soon</span>
+          </span>
+          {%- endif -%}
+          <small>{{ chapter.descriptor }}</small>
         </li>
         {%- endfor -%}
       </ol>
-      {%- else -%}
-      <p class="section-sub"><em>Coming soon.</em></p>
-      {%- endif -%}
     {%- endfor -%}
   </div>
 </section>

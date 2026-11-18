@@ -1,0 +1,176 @@
+# The full Part-to-chapter table of contents, kept in sync with
+# _plans/iteration-plan.md. chapters.html renders this grouped by part,
+# matching each chapter's `number` against a `_docs` page's front-matter
+# `order` to decide whether to link it. `name` must match a `_parts/*.md`
+# file's `part_name` exactly.
+parts:
+  - number: 0
+    name: "Foundations"
+    chapters:
+      - number: 0
+        title: "Prerequisites and the two stacks"
+        descriptor: "The tools, exact pins and two local stacks every example in this catalog runs on: the application stack a request and a tool call travel through, and the observability stack that watches them."
+      - number: 1
+        title: "Why agent-facing APIs are different"
+        descriptor: "Designing an API for an agent or a large language model is a systematically different engineering job from designing one for a human or a browser, measured on one real task against two contracts."
+      - number: 2
+        title: "How to read this catalog"
+        descriptor: "The anatomy every pattern page shares, the forces every pattern trades against, the taxonomy that groups them, the field vocabulary they assume, and the principles and anti-patterns named once and invoked throughout."
+
+  - number: 1
+    name: "Build: synchronous APIs"
+    chapters:
+      - number: 3
+        title: "Intent Endpoint (over CRUD)"
+        descriptor: "One intent-named endpoint performs a whole business operation atomically, where a chatty sequence of CRUD calls leaves a window of partial state an agent can observe and act on incorrectly."
+      - number: 4
+        title: "Search over Pagination"
+        descriptor: "A typed-filter search call returns exactly the matching orders directly, measured against a raw pagination sweep that must scan page after page to find the same records."
+      - number: 5
+        title: "Batch Operation and Count Flag"
+        descriptor: "An id-keyed batch endpoint resolves many identifiers in one call with explicit misses, and a count endpoint answers how many with a bare number, each measured against the one-at-a-time and fetch-everything alternatives they replace."
+      - number: 6
+        title: "Idempotency and Safe Retries"
+        descriptor: "A required Idempotency-Key header, enforced by a server-side Idempotent Consumer, replays the first response byte for byte on a repeat key and rejects the same key reused with a different body, where an unguarded retry places a second order."
+      - number: 7
+        title: "Strict Self-Describing Contract (OpenAPI 3.1)"
+        descriptor: "A precise OpenAPI 3.1 document, generated from the code and kept in sync with it, is the contract an agent actually reads before calling a tool."
+      - number: 8
+        title: "Semantic Metadata and llms.txt + Dual-Use Portal"
+        descriptor: "A machine-readable llms.txt and a shared portal serve a browsing human and a reading agent from the same source, instead of two surfaces drifting apart."
+      - number: 9
+        title: "Token-Efficient Response / Agent BFF"
+        descriptor: "A backend-for-frontend layer shapes a response for the token budget an agent actually has, instead of returning a human-facing payload unchanged."
+      - number: 10
+        title: "Instructive Error (RFC 9457)"
+        descriptor: "An RFC 9457 problem response names what was wrong and what to try next, instead of a bare status code an agent cannot act on."
+      - number: 11
+        title: "Propose/Preview/Commit"
+        descriptor: "A preview step lets an agent see the effect of a write before committing it, so an irreversible action is never the first thing that happens."
+      - number: 12
+        title: "MCP-First Single CDI Bean"
+        descriptor: "One CDI bean serves REST, GraphQL and an MCP tool from the same business logic, so the three surfaces never drift apart."
+
+  - number: 2
+    name: "Build: MCP packaging"
+    chapters:
+      - number: 13
+        title: "Package an API as MCP Tools"
+        descriptor: "quarkus-mcp-server packages an existing API's operations as registered MCP tools, resources and prompts."
+      - number: 14
+        title: "Domain-Split Toolset and Progressive Discovery"
+        descriptor: "Splitting a large toolset by domain and discovering it progressively keeps an agent's tool list small enough to pick from accurately."
+      - number: 15
+        title: "Reshape not Wrap: Heterogeneous Protocols"
+        descriptor: "A gRPC service sits behind the same agent-facing facade as a REST or GraphQL one, reshaped for the caller instead of wrapped unchanged."
+      - number: 16
+        title: "Securing and Gating MCP Tools"
+        descriptor: "An MCP tool surface is scoped and gated the same way any other credentialed API is, not left open because the caller happens to be a model."
+
+  - number: 3
+    name: "Build: asynchronous APIs"
+    chapters:
+      - number: 17
+        title: "Event-Triggered Agent Wakeup"
+        descriptor: "A Kafka event wakes an agent to act on its own schedule, instead of the agent polling an endpoint to find out whether anything changed."
+      - number: 18
+        title: "Multi-Agent Choreography"
+        descriptor: "Several agents coordinate through events on a shared topic, each reacting to what the others produced, instead of one agent orchestrating every step directly."
+      - number: 19
+        title: "Human-in-the-Loop Gate"
+        descriptor: "An explicit gate holds an irreversible action for human approval, with the mechanism chosen to match how long that approval might take."
+      - number: 20
+        title: "Long-Running Agent Workflow"
+        descriptor: "A long-running workflow with compensating steps carries an agent-triggered process safely across minutes or days, not just one request."
+      - number: 21
+        title: "Replayable Agent Memory / Event-Sourced Audit"
+        descriptor: "An event-sourced log gives an agent a replayable memory of what happened, and a human an audit trail of what the agent did."
+
+  - number: 4
+    name: "Consume"
+    chapters:
+      - number: 22
+        title: "Consuming an MCP Server from Claude Code"
+        descriptor: "Claude Code registers an MCP server, discovers its tools, and calls them the same way any other MCP-aware harness would."
+      - number: 23
+        title: "Building a Claude Code Skill"
+        descriptor: "A packaged skill teaches Claude Code how to drive a specific API correctly, instead of relying on the model to rediscover the right sequence each time."
+      - number: 24
+        title: "langchain4j Agent as a Programmatic Consumer"
+        descriptor: "A langchain4j AiService calls the same registered tools programmatically, without a human approving each step."
+      - number: 25
+        title: "Consuming the Async Side"
+        descriptor: "A consumer reacts to the same Kafka events an agent-facing producer emits, closing the loop on the asynchronous patterns."
+      - number: 26
+        title: "The Prompt-plus-Contract Loop and Decision-Rule Review"
+        descriptor: "A reviewed decision rule, not just a reviewed prompt, is what actually governs whether an agent's action is allowed to happen."
+
+  - number: 5
+    name: "Test and automate"
+    chapters:
+      - number: 27
+        title: "Contract and Manifest Conformance"
+        descriptor: "A conformance check confirms a running service still matches its published contract and tool manifest, not just that it starts."
+      - number: 28
+        title: "Agent-Behaviour Eval with Deterministic Replay"
+        descriptor: "A recorded, replayable transcript turns an agent's behavior on a task into a deterministic, repeatable check."
+      - number: 29
+        title: "Scripted Non-Interactive Consumption"
+        descriptor: "A scripted, non-interactive run exercises the same tool contract a human would drive by hand, with its own negative witness."
+      - number: 30
+        title: "Testing Async Flows and the Human-in-the-Loop Gate"
+        descriptor: "An async flow and its human-in-the-loop gate are tested the same way any other contract is: by observing the effect, not the exit code."
+
+  - number: 6
+    name: "Ship"
+    chapters:
+      - number: 31
+        title: "Publish the Tool Surface"
+        descriptor: "An MCP image, a stdio jar and a published llms.txt ship together as one versioned release of the tool surface."
+      - number: 32
+        title: "CI for Agent-Facing APIs"
+        descriptor: "A contract-drift check and a schema-compatibility gate in CI catch a breaking change before an agent ever calls it in production."
+
+  - number: 7
+    name: "Run in production"
+    chapters:
+      - number: 33
+        title: "Observability for Agent Traffic"
+        descriptor: "Traces, metrics and logs for agent traffic carry the OpenTelemetry GenAI conventions, including token and cost, not just a request's latency."
+      - number: 34
+        title: "Auditing AI-Using Code"
+        descriptor: "An inward audit of a service's own langchain4j code, not just the APIs it exposes, confirms what it is actually allowed to call out to."
+      - number: 35
+        title: "Identity and Authorization Guardrails"
+        descriptor: "Keycloak OIDC, PKCE, client credentials and token exchange carry an agent's delegated identity through a call, with a step-up challenge where the action warrants one."
+      - number: 36
+        title: "Traffic and Resource Guardrails"
+        descriptor: "Rate limits, topic ACLs, schema enforcement and quotas bound what an agent-facing surface can be made to do under load or abuse."
+      - number: 37
+        title: "Running on Kubernetes with Strimzi"
+        descriptor: "The final project runs on Kubernetes with Strimzi-managed Kafka, the same domain the whole catalog builds on."
+      - number: 38
+        title: "Final Project: the Focused Multi-Domain Data Mesh"
+        descriptor: "A focused data mesh built from the shipping domain's own services closes the lifecycle, governed by Dehghani's four data mesh principles."
+
+  - number: 8
+    name: "Appendices"
+    chapters:
+      - number: "A"
+        title: "llms.txt in Depth"
+        descriptor: "A deeper, standalone treatment of llms.txt: its syntax, its placement, and how a model actually reads it."
+      - number: "B"
+        title: "OpenShift Local (CRC)"
+        descriptor: "The final project's data products run again on OpenShift Local, the same neutral code demonstrated on a different platform."
+      - number: "C"
+        title: "Streaming Comparison (WebSockets, Webhooks, gRPC)"
+        descriptor: "WebSockets, webhooks and gRPC are compared side by side as alternatives to the request/response and event-driven patterns built elsewhere in the catalog."
+      - number: "D"
+        title: "Pattern Map and Glossary"
+        descriptor: "A pattern map, a glossary and a cross-stack transfer table index every pattern against its Python/FastAPI and Strawberry GraphQL equivalent."
+      - number: "E"
+        title: "Building the Consuming Skill in Claude Code, End to End"
+        descriptor: "A Claude Code skill for driving this catalog's own services is assembled end to end, from its first prompt to its packaged form."
+      - number: "F"
+        title: "Deterministic Decisioning Behind Agent Tools"
+        descriptor: "A rules or DMN engine behind a tool makes a business decision deterministic, the concrete answer to trusting a model's own reasoning to enforce it."
