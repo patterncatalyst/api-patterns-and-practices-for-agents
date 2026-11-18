@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.14"
+      - run: python -m pip install pyyaml==6.0.3
+      - name: Validator self-test
+        run: python scripts/validate.py --self-test
+      - name: Validate content
+        run: python scripts/validate.py
+
+  voice:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Voice scan (ban tier)
+        run: bash scripts/voice-scan.sh
+
+  idiomatic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Idiomatic scan (ban tier)
+        run: bash scripts/idiomatic-scan.sh
+
+  host-ids:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.14"
+      - name: Scanner self-test
+        run: python scripts/host_ids.py self-test
+      - name: Host identifiers (paths only, values never printed)
+        run: python scripts/host_ids.py check
+
+  site-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: ruby/setup-ruby@v1.338.0
+        with:
+          ruby-version: "4.0.9"
+          bundler-cache: true
+      - name: Jekyll build
+        run: bundle exec jekyll build --baseurl ""
+
+  # Examples do not exist until r02; this job is a no-op (skipped cleanly) until
+  # examples/*/pom.xml appears, then it runs mvn verify per discovered module.
+  examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - id: poms
+        run: |
+          shopt -s nullglob
+          poms=(examples/domain-model/pom.xml examples/*/pom.xml examples/a[a-e]-*/pom.xml)
+          if [[ ${#poms[@]} -eq 0 ]]; then
+            echo "has_poms=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_poms=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-java@v6.2.0
+        if: steps.poms.outputs.has_poms == 'true'
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+      - name: Install the shared domain model
+        if: steps.poms.outputs.has_poms == 'true'
+        run: mvn -B -ntp -f examples/domain-model/pom.xml install -DskipTests
+      - name: mvn verify (every other module)
+        if: steps.poms.outputs.has_poms == 'true'
+        run: |
+          shopt -s nullglob
+          for p in examples/*/pom.xml examples/a[a-e]-*/pom.xml; do
+            [[ "$p" == examples/domain-model/pom.xml ]] && continue
+            echo "==> mvn -B verify ($p)"
+            (cd "$(dirname "$p")" && mvn -B verify)
+          done
+      - name: No examples yet
+        if: steps.poms.outputs.has_poms == 'false'
+        run: echo "no pom.xml found yet, nothing to build"
+
+  # The one check branch protection requires: fails unless every job above succeeded.
+  ci-ok:
+    name: ci-ok
+    if: always()
+    needs: [validate, voice, idiomatic, host-ids, site-build, examples]
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: jq -e 'to_entries | all(.value.result == "success")' <<<"$NEEDS"
