@@ -1,0 +1,71 @@
+---
+layout: default
+title: Home
+---
+
+<section class="hero">
+  <div class="container">
+    <span class="hero__eyebrow">Quarkus · Apache Camel · Kafka · MCP · Keycloak · langchain4j · LGTM</span>
+    <h1 class="hero__title">{{ site.title }}</h1>
+    <p class="hero__lead">
+      Build APIs that an AI agent or LLM consumes, not a human browsing
+      Swagger UI. You reshape REST and GraphQL endpoints into MCP tools,
+      wake agents up on Kafka events, wire identity and traffic guardrails
+      around every tool call, and trace agent traffic in Grafana. Every
+      pattern states a stack-neutral contract first, so it transfers to
+      Python/FastAPI and Strawberry GraphQL.
+    </p>
+    <div class="hero__cta">
+      <a class="btn btn--primary"
+         href="{{ '/docs/00-index/' | relative_url }}">Start with the chapters →</a>
+      <a class="btn btn--secondary"
+         href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}"
+         rel="noopener">View on GitHub ↗</a>
+    </div>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="container">
+    <div class="stats">
+      <div class="stat"><span class="stat__value">{{ site.parts.size }}</span><span class="stat__label">Parts, from foundations to the final project</span></div>
+      <div class="stat"><span class="stat__value">{{ site.docs.size }}</span><span class="stat__label">Chapters and appendices published so far</span></div>
+      <div class="stat"><span class="stat__value">2</span><span class="stat__label">Stacks per pattern: this book's Quarkus and Camel, and your own</span></div>
+      <div class="stat"><span class="stat__value">1</span><span class="stat__label">Domain throughout: orders, stock, payments, shipments and notifications</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-heading">The parts</h2>
+    <p class="section-sub">
+      Each pattern chapter states the problem, shows the Quarkus and Camel
+      code that solves it, and ends with an invitation to build the same
+      contract in your own stack. Later parts package the tool surface,
+      test it, ship it, and run it in production.
+    </p>
+
+    <div class="cards">
+      {% assign parts_sorted = site.parts | sort: "order" %}
+      {% for part in parts_sorted %}
+      {% assign part_docs = site.docs | where: "part", part.part_name %}
+      <a class="card" href="{{ part.url | relative_url }}">
+        <div class="card__eyebrow">{{ part.label | default: part.title }}</div>
+        <h3 class="card__title">{{ part.title }}</h3>
+        {% if part.blurb %}
+        <p class="card__desc">{{ part.blurb }}</p>
+        {% endif %}
+        <div class="card__meta">
+          {% if part_docs.size > 0 %}
+            <span>{{ part_docs.size }} chapter{% if part_docs.size != 1 %}s{% endif %}</span>
+          {% else %}
+            <span>Coming soon</span>
+          {% endif %}
+          <span>Explore →</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>

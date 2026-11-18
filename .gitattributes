@@ -1,4 +1,4 @@
-# GitHub Linguist overrides — reflect the real source language on the repo card.
+# GitHub Linguist overrides: reflect the real source language on the repo card.
 # DECISIVE: GitHub excludes examples/ from language stats by default; re-include it.
 examples/** linguist-vendored=false linguist-generated=false linguist-documentation=false
 # Jekyll site chrome and generated output are NOT the source.
