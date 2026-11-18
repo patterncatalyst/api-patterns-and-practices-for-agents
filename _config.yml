@@ -1,0 +1,77 @@
+title: "API Patterns & Practices: APIs for Agents & LLMs"
+description: "A pattern catalog for building APIs that AI agents and LLMs consume: REST and GraphQL as MCP tools, event-driven agent wakeups on Kafka, and the identity, traffic and observability guardrails a production agent-facing surface needs. Built on Quarkus, Apache Camel and Kafka; every pattern states a stack-neutral contract that transfers to Python/FastAPI and Strawberry GraphQL."
+brand_emoji: "🤖"
+
+github_username: "patterncatalyst"
+github_repo: "api-patterns-and-practices-for-agents"
+
+url: "https://patterncatalyst.github.io"
+baseurl: "/api-patterns-and-practices-for-agents"
+
+license: "Apache 2.0 (code), CC BY 4.0 (prose)"
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+permalink: pretty
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+collections:
+  docs:
+    output: true
+    permalink: /docs/:name/
+  plans:
+    output: false
+  example_pages:
+    output: true
+    permalink: /examples/:name/
+  parts:
+    output: true
+    permalink: /parts/:name/
+
+defaults:
+  - scope:
+      path: ""
+      type: docs
+    values:
+      layout: tutorial
+      sectionid: docs
+  - scope:
+      path: ""
+      type: plans
+    values:
+      layout: plan
+  - scope:
+      path: ""
+      type: example_pages
+    values:
+      layout: tutorial
+      sectionid: examples
+  - scope:
+      path: ""
+      type: parts
+    values:
+      layout: part_index
+      sectionid: docs
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor/
+  - node_modules/
+  - examples/
+  - contracts/
+  - scripts/
+  - CLAUDE.md
+  - "*.py"
+  - README.md
+  - LICENSE
+  - LICENSE-docs.md
+  - CONTRIBUTING.md
+  - .bundle/
