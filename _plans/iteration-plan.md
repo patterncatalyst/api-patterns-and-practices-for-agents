@@ -84,6 +84,12 @@ squash-merged on the owner's OK, tagged `rNN.x`, notes-only release.
 - C Streaming comparison (WebSockets/webhooks/gRPC) + gRPC-behind-facade note
 - D Pattern map and glossary + cross-stack transfer table (Python/FastAPI, Strawberry GraphQL)
 - E Building the consuming skill in Claude Code, end to end
+- F Deterministic decisioning behind agent tools (Drools/Kogito, DMN): a rules/DMN engine
+  behind a tool makes a business decision deterministic, the concrete answer to the
+  Prompt-as-Business-Logic anti-pattern and the Model-Reasons-Application-Controls
+  principle; distinct from Part 3's model-call determinism (the asynchronous patterns
+  use a different mechanism to make a workflow step deterministic); one focused example,
+  the refund-approval decision reimplemented as rules; built in a later iteration
 
 ## Release table
 
@@ -100,7 +106,7 @@ squash-merged on the owner's OK, tagged `rNN.x`, notes-only release.
 | r09 | Ship | 31 to 32 | |
 | r10 | Run: observability, auditing, guardrails | 33 to 36 | |
 | r11 | Run: Kubernetes + final project | 37 to 38 | |
-| r12 | Appendices A, C, D, E | A, C, D, E | |
+| r12 | Appendices A, C, D, E, F | A, C, D, E, F | |
 | r13 | Appendix B (OpenShift Local) | B | |
 | r14 | Retro: idiomatic review, voice review, QA sweep, host scrub, full fresh re-run | all | |
 | r15 | The deck (decks-last) | none | |
