@@ -70,7 +70,10 @@ jobs:
       - id: poms
         run: |
           shopt -s nullglob
-          poms=(examples/domain-model/pom.xml examples/*/pom.xml examples/a[a-e]-*/pom.xml)
+          poms=()
+          for p in examples/domain-model/pom.xml examples/*/pom.xml examples/a[a-e]-*/pom.xml; do
+            [[ -f "$p" ]] && poms+=("$p")
+          done
           if [[ ${#poms[@]} -eq 0 ]]; then
             echo "has_poms=false" >> "$GITHUB_OUTPUT"
           else
