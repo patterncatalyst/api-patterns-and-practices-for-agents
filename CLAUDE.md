@@ -79,7 +79,7 @@ bibliography.md  LICENSE  LICENSE-docs.md
 Front matter: title, order, part, description, duration. `part` must match a `_parts` file's `part_name`. Quote values that contain colons.
 
 - Write like Enterprise Integration Patterns, Geewax tone: problem before mechanism, show the code, state the trade-off, stop.
-- About 2,000 words is a target, never a floor; 2,500 is the maximum, excluding code. Never pad.
+- Chapter length follows the information, not a word count, in the Enterprise Integration Patterns style: cover what the pattern needs, show the code, state the trade-off, stop. There is no hard floor and no hard ceiling. Never pad to reach a number, and never cut substance to stay under one; add a diagram where density climbs.
 - Pattern chapters: `## Pattern: <Name>` with `### The problem`, `### The solution` (one bold one-sentence definition), `### How Quarkus and Camel model it` (or `### How Quarkus models it` in a chapter whose example has no Camel); then `## Build, run, observe` (short: one code block with the commands, then one or two sentences on what runs and what to watch, ending with the pass count, then at most three `Try` bullets of one sentence each naming the switch and the visible effect; 250 words as a soft cap; no test lists, no check numbers, no run statistics, which belong in the example's README), `## When not to use it`, `## References`.
 - **Exactly one cross-stack AI callout per pattern chapter**, in this form, with no HTML wrapper and no nested quote:
 
