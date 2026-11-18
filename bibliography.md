@@ -25,6 +25,7 @@ Works only: books, papers and specifications. Documentation pages are cited unde
     <tr><td><a href="https://www.oreilly.com/library/view/restful-web-apis/9781449359713/" rel="noopener"><em>RESTful Web APIs</em></a><br><small>O'Reilly, ISBN 978-1-4493-5971-3. Hypermedia, resource design, and the semantic-description patterns behind a self-describing contract</small></td><td>Leonard Richardson, Mike Amundsen, Sam Ruby</td><td>2013</td></tr>
     <tr><td><a href="https://www.oreilly.com/library/view/the-design-of/9781492042548/" rel="noopener"><em>The Design of Web APIs, Second Edition</em></a><br><small>Manning, ISBN 978-1-61729-949-0 (English translation). API-first design process, contract design, and usability for API consumers, human or automated</small></td><td>Arnaud Lauret</td><td>2024</td></tr>
     <tr><td><a href="https://www.oreilly.com/library/view/data-mesh/9781492092384/" rel="noopener"><em>Data Mesh: Delivering Data-Driven Value at Scale</em></a><br><small>O'Reilly, ISBN 978-1-4920-9238-4. The four data mesh principles (domain ownership, data as a product, self-serve platform, federated computational governance) behind the final project's data products</small></td><td>Zhamak Dehghani</td><td>2022</td></tr>
+    <tr><td><a href="https://www.oreilly.com/library/view/ai-engineering/9781098166304/" rel="noopener"><em>AI Engineering: Building Applications with Foundation Models</em></a><br><small>O'Reilly, ISBN 978-1-098-16630-4. The practitioner framing for tool use, context engineering and agent evaluation this catalog's thesis and taxonomy draw on</small></td><td>Chip Huyen</td><td>2024</td></tr>
   </tbody>
 </table>
 
@@ -40,8 +41,13 @@ Works only: books, papers and specifications. Documentation pages are cited unde
     <tr><td><a href="https://www.rfc-editor.org/rfc/rfc9457.html" rel="noopener">RFC 9457: Problem Details for HTTP APIs</a></td><td>IETF</td><td>The instructive-error pattern's wire format</td></tr>
     <tr><td><a href="https://www.rfc-editor.org/rfc/rfc8693.html" rel="noopener">RFC 8693: OAuth 2.0 Token Exchange</a></td><td>IETF</td><td>Delegated identity when an agent calls a tool on a user's behalf</td></tr>
     <tr><td><a href="https://llmstxt.org/" rel="noopener">llms.txt</a></td><td>Jeremy Howard and contributors</td><td>The semantic-metadata and dual-use-portal pattern, and Appendix A</td></tr>
+    <tr><td><a href="https://agents.md/" rel="noopener">AGENTS.md</a></td><td>AGENTS.md contributors</td><td>The agent-facing repository convention named in the catalog's landscape vocabulary</td></tr>
     <tr><td><a href="https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview" rel="noopener">Tool use with Claude</a></td><td>Anthropic</td><td>Tool-call shape, parallel tool use, and the contract an agent expects from a tool definition</td></tr>
+    <tr><td><a href="https://www.anthropic.com/engineering/writing-tools-for-agents" rel="noopener">Writing effective tools for AI agents</a></td><td>Anthropic</td><td>Few high-impact tools over many granular ones, and the token cost of a tool's own definition</td></tr>
+    <tr><td><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" rel="noopener">Effective context engineering for AI agents</a></td><td>Anthropic</td><td>The bounded-context-window argument behind intent-over-CRUD and search-over-pagination</td></tr>
     <tr><td><a href="https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills" rel="noopener">Equipping agents for the real world with Agent Skills</a></td><td>Anthropic</td><td>Part 4's consuming-skill chapters and Appendix E</td></tr>
+    <tr><td><a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" rel="noopener">The lethal trifecta for AI agents</a></td><td>Simon Willison</td><td>The trust-boundary force: private data, untrusted content and a path to exfiltrate it, combined</td></tr>
+    <tr><td><a href="https://www.thoughtworks.com/radar" rel="noopener">Technology Radar</a></td><td>ThoughtWorks</td><td>The MCP-by-default and naive-API-to-MCP-conversion cautions</td></tr>
   </tbody>
 </table>
 
