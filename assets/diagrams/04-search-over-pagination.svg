@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 460" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="30" y="40" width="460" height="330" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="42" y="60" font-size="12" font-weight="700" fill="#888">Raw pagination: sweep every page (size 10)</text>
+<rect x="570" y="40" width="460" height="330" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="582" y="60" font-size="12" font-weight="700" fill="#888">Typed search: one call isolates the target</text>
+<rect x="60" y="90" width="400" height="44" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="260.0" y="117.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">GET /orders?page=0&amp;size=10</text>
+<rect x="60" y="144" width="400" height="44" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="260.0" y="171.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">GET /orders?page=1&amp;size=10</text>
+<rect x="60" y="198" width="400" height="44" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="260.0" y="218.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">GET /orders?page=2&amp;size=10</text>
+<text x="260.0" y="235.0" font-size="11.5" fill="#555555" text-anchor="middle">a match appears, but a caller cannot know that in advance</text>
+<rect x="60" y="270" width="400" height="40" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="260.0" y="295.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">... pages 3, 4, 5 ...</text>
+<rect x="60" y="320" width="400" height="40" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="260.0" y="345.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">6 calls, 6479 bytes, to see every one of the 60 rows</text>
+<rect x="600" y="150" width="400" height="64" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="800.0" y="180.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">GET /orders/search?status=PLACED&amp;itemSku=SKU-2</text>
+<text x="800.0" y="197.0" font-size="11.5" fill="#555555" text-anchor="middle">typed filter, bound server-side</text>
+<rect x="600" y="250" width="400" height="56" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="800.0" y="276.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">exactly 3 matching orders, nothing else</text>
+<text x="800.0" y="293.0" font-size="11.5" fill="#555555" text-anchor="middle">1 call, 309 bytes</text>
+<rect x="30" y="390" width="1000" height="56" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="530.0" y="423.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Ignoring the filter breaks the isolation: the one call returns orders of every status and SKU instead</text>
+<path d="M800,214 L800,250" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="530" y="26" font-size="15" fill="#444444" text-anchor="middle" font-weight="700">Same 60-row table, two ways to find 3 rows</text>
+</svg>
