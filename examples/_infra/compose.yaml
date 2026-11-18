@@ -4,9 +4,8 @@ name: apa-infra
 # Apicurio Registry, Keycloak, and Ollama. The Grafana LGTM stack is in
 # compose.lgtm.yaml, started separately.
 #
-# No example references this stack yet (r01); it is declared here so the
-# ports, images, and healthchecks are pinned and reviewable before the first
-# example wires into it, starting r02.
+# Examples include this file so every service shares one pinned, healthchecked
+# definition. Ports, images, and healthchecks live here, not per example.
 services:
   kafka:
     image: docker.io/apache/kafka:4.3.2
@@ -96,25 +95,29 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.2
     container_name: apa-keycloak
-    command: ["start-dev"]
+    command: ["start-dev", "--import-realm"]
     ports:
-      - "127.0.0.1:8180:8080"     # Admin console and OIDC endpoints: /realms/master
+      - "127.0.0.1:8180:8080"     # Admin console and OIDC endpoints: /realms/apa
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
       - KC_HEALTH_ENABLED=true
+    volumes:
+      # Imported once at start-dev boot. Edit here, not through the admin console.
+      - ./keycloak/realm-apa.json:/opt/keycloak/data/import/realm-apa.json:ro,Z
     mem_limit: 1g
     healthcheck:
+      # start_period absorbs the realm import, which runs before the management port answers.
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nhost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q 'UP' <&3"]
       interval: 5s
       timeout: 5s
-      retries: 20
-      start_period: 30s
+      retries: 30
+      start_period: 60s
     networks:
       - apa
 
   ollama:
-    image: docker.io/ollama/ollama:0.40.16
+    image: docker.io/ollama/ollama:0.40.16@sha256:a372a1c0d1e15b68e9521189785c3ca17795c26c2356f8b1b10122cfb59ed0d7
     container_name: apa-ollama
     ports:
       - "127.0.0.1:11434:11434"   # Ollama API: GET /api/tags

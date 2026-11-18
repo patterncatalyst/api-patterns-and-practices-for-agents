@@ -1,0 +1,89 @@
+{
+  "realm": "apa",
+  "enabled": true,
+  "sslRequired": "none",
+  "accessTokenLifespan": 600,
+  "registrationAllowed": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "agent",
+        "description": "An AI agent calling the book's MCP tool surface on its own behalf"
+      }
+    ]
+  },
+  "clientScopes": [
+    {
+      "name": "roles",
+      "description": "Realm role claim, so the agent's token carries its assigned realm role",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "foo",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mcp:tools:read",
+      "description": "Call a read-only MCP tool",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    },
+    {
+      "name": "mcp:tools:write",
+      "description": "Call an MCP tool that changes state",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "apa-mcp",
+      "description": "Lab only: confidential client authenticating with the client_credentials grant (service account), so an agent can fetch a token with one request.",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "apa-mcp-dev-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "mcp:tools:read",
+        "mcp:tools:write"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-apa-mcp",
+      "enabled": true,
+      "serviceAccountClientId": "apa-mcp",
+      "realmRoles": [
+        "agent"
+      ]
+    }
+  ]
+}

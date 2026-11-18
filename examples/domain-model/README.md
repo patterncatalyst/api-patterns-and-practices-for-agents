@@ -10,15 +10,15 @@ pattern exercises which part of the domain.
 
 ## Status
 
-This is a placeholder directory. The buildable Maven module, its records, and
-its JUnit negative-witness tests land in r02, alongside Part 0's chapters and
-the first wiring of `examples/_infra/`. No `pom.xml` exists here yet.
+The buildable Maven module, its records, and its JUnit negative-witness tests
+landed in r02, alongside Part 0's chapters and the first wiring of
+`examples/_infra/`.
 
-## Use from an example (once the module lands)
+## Use from an example
 
-Examples will depend on `com.patterncatalyst.agentapi:domain-model:1.0.0`.
-Install it into the local Maven repository from the repository root, then
-build the example:
+Examples depend on `com.patterncatalyst.agentapi:domain-model:1.0.0`. Install
+it into the local Maven repository from the repository root, then build the
+example:
 
 ```bash
 mvn -B -ntp -f examples/domain-model install

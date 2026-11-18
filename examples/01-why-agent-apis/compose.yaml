@@ -1,0 +1,59 @@
+name: apa-01
+
+# LIVE mode only (see README). This example needs no Kafka, PostgreSQL, Apicurio or Keycloak,
+# so it does not include the shared _infra/compose.yaml; it declares the one piece it needs
+# (Ollama, same pin as _infra/compose.yaml) directly, to keep the stack minimal. The replay
+# path (the default) starts no containers at all.
+services:
+  ollama:
+    image: docker.io/ollama/ollama:0.40.16@sha256:a372a1c0d1e15b68e9521189785c3ca17795c26c2356f8b1b10122cfb59ed0d7
+    container_name: apa-ollama
+    ports:
+      - "127.0.0.1:11434:11434"   # Ollama API: GET /api/tags
+    environment:
+      - OLLAMA_NUM_PARALLEL=1
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_KEEP_ALIVE=30m
+      - OLLAMA_CONTEXT_LENGTH=2048
+    volumes:
+      # Filled once by scripts/ollama-model.sh pull; mounted read-only and never removed by
+      # `down -v`.
+      - apa-ollama-models:/root/.ollama:ro
+    mem_limit: 4g
+    healthcheck:
+      # The image has no curl, wget or bash.
+      test: ["CMD", "ollama", "list"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+      start_period: 3s
+    networks: [apa]
+
+  app:
+    build:
+      context: ..
+      dockerfile: 01-why-agent-apis/Containerfile
+    container_name: apa-why-agent-apis
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      QUARKUS_LANGCHAIN4J_OLLAMA_BASE_URL: http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+volumes:
+  apa-ollama-models:
+    external: true
+
+networks:
+  apa:
+    name: apa
