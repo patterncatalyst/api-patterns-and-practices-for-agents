@@ -105,9 +105,10 @@ instead.
 `examples/_infra/compose.lgtm.yaml` runs one `grafana/otel-lgtm` container:
 Loki, Grafana, Tempo and Prometheus behind a single OTLP endpoint. It is a
 separate compose file, started and stopped on its own, so observability can
-come up or go down without touching the application stack a check actually
-depends on. No example's `verify.sh` requires it to be running; it exists so
-a trace, a metric or a log line can be inspected by hand after a run.
+come up or go down without touching the application stack the checks
+depend on. The stack-check example brings it up to confirm that traces,
+metrics and logs arrive; past that it stays optional, there so a signal can
+be inspected by hand after a run.
 
 | Signal | Host port | Data source in Grafana |
 |---|---|---|

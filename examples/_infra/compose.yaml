@@ -4,9 +4,8 @@ name: apa-infra
 # Apicurio Registry, Keycloak, and Ollama. The Grafana LGTM stack is in
 # compose.lgtm.yaml, started separately.
 #
-# No example references this stack yet (r01); it is declared here so the
-# ports, images, and healthchecks are pinned and reviewable before the first
-# example wires into it, starting r02.
+# Examples include this file so every service shares one pinned, healthchecked
+# definition. Ports, images, and healthchecks live here, not per example.
 services:
   kafka:
     image: docker.io/apache/kafka:4.3.2
