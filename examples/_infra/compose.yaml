@@ -1,0 +1,151 @@
+name: apa-infra
+
+# Shared local infrastructure for the book's examples: Kafka, PostgreSQL,
+# Apicurio Registry, Keycloak, and Ollama. The Grafana LGTM stack is in
+# compose.lgtm.yaml, started separately.
+#
+# No example references this stack yet (r01); it is declared here so the
+# ports, images, and healthchecks are pinned and reviewable before the first
+# example wires into it, starting r02.
+services:
+  kafka:
+    image: docker.io/apache/kafka:4.3.2
+    container_name: apa-kafka
+    ports:
+      - "127.0.0.1:9092:9092"   # host clients (localhost:9092)
+    environment:
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      # EXTERNAL for host clients, INTERNAL (kafka:9094) for containers on the apa network
+      - KAFKA_LISTENERS=EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,INTERNAL://0.0.0.0:9094
+      - KAFKA_ADVERTISED_LISTENERS=EXTERNAL://localhost:9092,INTERNAL://kafka:9094
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_NUM_PARTITIONS=3
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=1
+      - KAFKA_MIN_INSYNC_REPLICAS=1
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+      - CLUSTER_ID=lL8e-uuWGeHLgSnZzfqc1w
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    mem_limit: 1g
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+    networks:
+      - apa
+
+  postgres:
+    image: ghcr.io/cloudnative-pg/postgresql:18.6-202611090812-standard-trixie
+    container_name: apa-postgres
+    # The operand image has no entrypoint and runs as UID 26; start.sh does initdb and exec postgres.
+    user: "26"
+    entrypoint: []
+    command: ["bash", "/opt/apa/start.sh"]
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      - POSTGRES_DB=apa
+      - POSTGRES_USER=apa
+      - POSTGRES_PASSWORD=apa
+      - PGDATA=/var/lib/postgresql/data
+    volumes:
+      # The named volume inherits the image's ownership of /var/lib/postgresql (UID 26): no host chown.
+      - postgres-data:/var/lib/postgresql
+      - ./postgres/start.sh:/opt/apa/start.sh:ro,Z
+      - ./postgres/init:/opt/apa/init:ro,Z
+    mem_limit: 1g
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U apa -d apa"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks:
+      - apa
+
+  apicurio:
+    image: quay.io/apicurio/apicurio-registry:3.3.4
+    container_name: apa-apicurio
+    ports:
+      - "127.0.0.1:8081:8080"     # REST API and UI (/apis/registry/v3)
+      - "127.0.0.1:19000:9000"    # management interface: /health/ready
+    # In-memory storage: the registry is empty after every restart.
+    environment:
+      - APICURIO_STORAGE_KIND=sql
+      - APICURIO_STORAGE_SQL_KIND=h2
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:9000/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+    networks:
+      - apa
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.2
+    container_name: apa-keycloak
+    command: ["start-dev"]
+    ports:
+      - "127.0.0.1:8180:8080"     # Admin console and OIDC endpoints: /realms/master
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KC_HEALTH_ENABLED=true
+    mem_limit: 1g
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nhost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q 'UP' <&3"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks:
+      - apa
+
+  ollama:
+    image: docker.io/ollama/ollama:0.40.16
+    container_name: apa-ollama
+    ports:
+      - "127.0.0.1:11434:11434"   # Ollama API: GET /api/tags
+    environment:
+      - OLLAMA_NUM_PARALLEL=1
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_KEEP_ALIVE=30m
+      - OLLAMA_CONTEXT_LENGTH=2048
+    volumes:
+      # Filled once by a model-pull helper (added with the first consuming example); mounted
+      # read-only and never removed by `down -v`.
+      - apa-ollama-models:/root/.ollama:ro
+    mem_limit: 4g
+    healthcheck:
+      # The image has no curl, wget or bash.
+      test: ["CMD", "ollama", "list"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+      start_period: 3s
+    networks:
+      - apa
+
+volumes:
+  kafka-data:
+    name: apa-kafka-data
+  postgres-data:
+    name: apa-postgres-data
+  apa-ollama-models:
+    external: true
+
+networks:
+  apa:
+    name: apa
