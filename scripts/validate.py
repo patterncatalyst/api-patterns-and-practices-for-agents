@@ -347,6 +347,60 @@ def check_chapters(rep: Report):
                                         "'Setting up the cluster' section")
 
 
+HEADING2_RE = re.compile(r"^##(?!#)\s")
+SPINE_ORDER = ["## Learning objectives", "## Why this matters", "## Anti-patterns",
+               "## When not to use it", "## References"]
+
+
+def check_chapter_spine(rep: Report):
+    """Every non-appendix chapter carries the spine: '## Learning objectives' (first,
+    bulleted), '## Why this matters' (second), ..., '## Anti-patterns' (after
+    '## Build, run, observe' when that section exists), '## When not to use it' (pattern
+    chapters only), '## References'. Appendices (basename starting with 'a') are exempt:
+    they are unbuilt and decided later.
+    """
+    for p in files(rep.root, "_docs/*.md"):
+        if p.name.startswith("a"):
+            continue
+        _, body, off = split_front(p.read_text(encoding="utf-8"))
+        plines = prose_lines(body)
+        h2 = [(i, t.rstrip()) for i, t in plines if HEADING2_RE.match(t)]
+        if not h2:
+            rep.err(p, 1 + off, "chapter spine: no level-2 headings found")
+            continue
+        lines: dict[str, int] = {}
+        for i, t in h2:
+            lines.setdefault(t, i)
+        has_pattern = any(t.startswith("## Pattern:") for _, t in h2)
+
+        required = ["## Learning objectives", "## Why this matters", "## Anti-patterns", "## References"]
+        if has_pattern:
+            required = required + ["## When not to use it"]
+        for req in required:
+            if req not in lines:
+                rep.err(p, None, f"chapter spine: missing required heading '{req}'")
+
+        if h2[0][1] != "## Learning objectives":
+            rep.err(p, h2[0][0] + off, "chapter spine: '## Learning objectives' must be the first level-2 heading")
+        if len(h2) > 1 and h2[1][1] != "## Why this matters":
+            rep.err(p, h2[1][0] + off, "chapter spine: '## Why this matters' must be the second level-2 heading")
+
+        if "## Learning objectives" in lines:
+            lo = lines["## Learning objectives"]
+            nxt = next((t for i, t in plines if i > lo and t.strip() != ""), None)
+            if nxt is None or not nxt.lstrip().startswith("- "):
+                rep.err(p, lo + off, "chapter spine: '## Learning objectives' must be followed by a bulleted list")
+
+        present = [(lines[h], h) for h in SPINE_ORDER if h in lines]
+        for (l1, n1), (l2, n2) in zip(present, present[1:]):
+            if l1 >= l2:
+                rep.err(p, l2 + off, f"chapter spine: '{n2}' must come after '{n1}'")
+
+        if BRO_HEAD in lines and "## Anti-patterns" in lines and lines["## Anti-patterns"] < lines[BRO_HEAD]:
+            rep.err(p, lines["## Anti-patterns"] + off,
+                    f"chapter spine: '## Anti-patterns' must come after '{BRO_HEAD}'")
+
+
 def check_callout_shape(rep: Report, p: Path, lines: list[str], at: int, off: int):
     """The cross-stack callout:
         > **\U0001F916 Explore with your agent**
@@ -447,7 +501,7 @@ def check_no_forwarding(rep: Report):
 
 
 CHECKS = [check_front_matter, check_liquid, check_diagrams, check_dashes, check_chapters,
-          check_example_pages, check_examples, check_no_forwarding]
+          check_chapter_spine, check_example_pages, check_examples, check_no_forwarding]
 
 
 def run(root: Path) -> Report:
@@ -468,10 +522,16 @@ def self_test() -> int:
         '> **Build it elsewhere:** "Implement the same pattern in Python/FastAPI: call the demo endpoint and check the rule."\n'
         '> Check: it holds.\n'
     )
-    good_doc = (
-        '---\ntitle: "Demo"\norder: 1\npart: demo\n---\n\nIntro text.\n\n'
-        '{% include excalidraw.html file="01-demo" alt="Demo" %}\n\n## Pattern: Demo\n\n' + good_callout
-    )
+    seg_front = '---\ntitle: "Demo"\norder: 1\npart: demo\n---\n\n'
+    seg_lo = '## Learning objectives\n\n- Do the demo thing.\n\n'
+    seg_wtm = ('## Why this matters\n\nIntro text.\n\n'
+               '{% include excalidraw.html file="01-demo" alt="Demo" %}\n\n')
+    seg_pattern = '## Pattern: Demo\n\n' + good_callout + '\n'
+    seg_bro = BRO_HEAD + '\n\n```bash\n./verify.sh\n```\n\nIt runs and prints the result.\n\n'
+    seg_anti = '## Anti-patterns\n\nDo not do the bad thing.\n\n'
+    seg_wntu = '## When not to use it\n\nSkip this pattern when the bad thing is fine.\n\n'
+    seg_refs = '## References\n\n- A reference.\n'
+    good_doc = seg_front + seg_lo + seg_wtm + seg_pattern + seg_bro + seg_anti + seg_wntu + seg_refs
     results = []
     with tempfile.TemporaryDirectory() as tmp:
         def build(name: str) -> Path:
@@ -509,8 +569,11 @@ def self_test() -> int:
         results.append(("port-forward caught", any("forwarding" in x for x in e), e))
 
         r = build("xref")
-        (r / "_docs/01-demo.md").write_text(good_doc + "\nAn MCP tool call (chapter 12) stops at the gateway.\n"
-                                            "\n## References\n\n- Chapter 12, token budgets.\n")
+        xref_doc = good_doc.replace(
+            seg_anti, '## Anti-patterns\n\nDo not do the bad thing. An MCP tool call '
+                      '(chapter 12) stops at the gateway.\n\n'
+        ).replace(seg_refs, '## References\n\n- Chapter 12, token budgets.\n')
+        (r / "_docs/01-demo.md").write_text(xref_doc)
         e = run(r).errors
         results.append(("cross-reference in prose caught, allowed under References",
                         sum("cross-reference" in x for x in e) == 1, e))
@@ -533,17 +596,53 @@ def self_test() -> int:
                         any("is missing the" in x for x in e), e))
 
         r = build("bro")
-        long_bro = "\n## Build, run, observe\n\n```bash\n./verify.sh\n```\n\n" + " ".join(["word"] * 251) + "\n"
-        (r / "_docs/01-demo.md").write_text(good_doc + long_bro)
+        long_bro = BRO_HEAD + "\n\n```bash\n./verify.sh\n```\n\n" + " ".join(["word"] * 251) + "\n\n"
+        (r / "_docs/01-demo.md").write_text(good_doc.replace(seg_bro, long_bro))
         rr = run(r)
         results.append(("251-word build section warned, not failed",
                         any("soft cap 250" in x for x in rr.warnings) and not any("Build, run" in x for x in rr.errors),
                         rr.errors + rr.warnings))
 
         r = build("bro-check")
-        (r / "_docs/01-demo.md").write_text(good_doc + "\n## Build, run, observe\n\nOnly check 12 fails.\n")
+        bad_bro = BRO_HEAD + "\n\nOnly check 12 fails.\n\n"
+        (r / "_docs/01-demo.md").write_text(good_doc.replace(seg_bro, bad_bro))
         e = run(r).errors
         results.append(("check number in build section caught", any("check number" in x for x in e), e))
+
+        r = build("spine-missing-lo")
+        (r / "_docs/01-demo.md").write_text(
+            seg_front + seg_wtm + seg_pattern + seg_bro + seg_anti + seg_wntu + seg_refs)
+        e = run(r).errors
+        results.append(("chapter spine: missing Learning objectives caught",
+                        any("missing required heading '## Learning objectives'" in x for x in e), e))
+
+        r = build("spine-missing-anti")
+        (r / "_docs/01-demo.md").write_text(
+            seg_front + seg_lo + seg_wtm + seg_pattern + seg_bro + seg_wntu + seg_refs)
+        e = run(r).errors
+        results.append(("chapter spine: missing Anti-patterns caught",
+                        any("missing required heading '## Anti-patterns'" in x for x in e), e))
+
+        r = build("spine-order")
+        (r / "_docs/01-demo.md").write_text(
+            seg_front + seg_lo + seg_wtm + seg_pattern + seg_anti + seg_bro + seg_wntu + seg_refs)
+        e = run(r).errors
+        results.append(("chapter spine: Anti-patterns before Build, run, observe caught",
+                        any("'## Anti-patterns' must come after" in x for x in e), e))
+
+        r = build("spine-missing-wntu")
+        (r / "_docs/01-demo.md").write_text(
+            seg_front + seg_lo + seg_wtm + seg_pattern + seg_bro + seg_anti + seg_refs)
+        e = run(r).errors
+        results.append(("chapter spine: pattern chapter missing When not to use it caught",
+                        any("missing required heading '## When not to use it'" in x for x in e), e))
+
+        r = build("spine-appendix-exempt")
+        (r / "_docs/aa-appendix-demo.md").write_text(
+            '---\ntitle: "Appendix"\norder: 99\npart: demo\n---\n\nJust prose, no spine at all.\n')
+        e = run(r).errors
+        results.append(("chapter spine: appendix (a*-*.md) exempt from the spine",
+                        not any("chapter spine" in x for x in e), e))
 
         r = build("examples")
         (r / "examples/01-demo").mkdir(parents=True)
