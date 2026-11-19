@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{title}</title>
+</head>
+<body>
+<h1>{title}</h1>
+<p>{summary}</p>
+<h2>Operations</h2>
+<ul>
+{#for op in operations}
+<li data-op="{op.operationId}">{op.operationId}: {op.method} {op.path}, {op.summary}</li>
+{/for}
+</ul>
+<p><a href="/q/openapi">OpenAPI document</a></p>
+<p><a href="/llms.txt">llms.txt</a></p>
+</body>
+</html>
