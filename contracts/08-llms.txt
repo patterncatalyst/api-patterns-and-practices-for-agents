@@ -1,0 +1,12 @@
+# Order Service
+
+> Agent-facing order service: place an order and look one up by id.
+
+## API reference
+
+- [OpenAPI document](/q/openapi): the full generated contract
+
+## Operations
+
+- [placeOrder](/q/openapi#/operations/placeOrder): POST /orders, Place a new order.
+- [getOrder](/q/openapi#/operations/getOrder): GET /orders/{id}, Look up an order by id.

@@ -1,0 +1,16 @@
+type OrderSummary {
+  amount: BigDecimal
+  customerId: String
+  itemSku: String
+  orderId: String
+  quantity: Int!
+  status: String
+}
+
+"Query root"
+type Query {
+  "The lean order summary for every seeded order."
+  orderSummaries(orderIds: [String]): [OrderSummary]
+  "The lean order summary, by human-readable order id."
+  orderSummary(orderId: String): OrderSummary
+}
