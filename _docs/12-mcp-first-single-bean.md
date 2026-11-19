@@ -6,6 +6,15 @@ description: "One CDI bean serves REST, GraphQL and an MCP tool from the same bu
 duration: "25 minutes"
 ---
 
+## Learning objectives
+
+- Hold the business logic in one CDI bean instead of reimplementing it per transport.
+- Delegate REST, GraphQL and the MCP `@Tool` to that bean unchanged.
+- Confirm cross-face equality: the same input returns the same result regardless of transport.
+- Disable stdio for a detached-container profile while keeping it enabled for an attached process.
+
+## Why this matters
+
 A REST endpoint, a GraphQL query and an MCP tool that each reimplement the
 same read independently are three places the same business rule has to be
 kept correct, and three places it can quietly stop being the same rule. The
@@ -131,6 +140,12 @@ Try:
   check fails while each face individually still runs.
 - Call `tools/list` over the MCP endpoint by hand and compare the schema it
   advertises for `orderSummary` to the committed tool manifest.
+
+## Anti-patterns
+
+- **Reimplementing the same logic behind each transport.** Three independent implementations of one read give no guarantee that calling it through a different transport returns the same answer.
+- **Diverging one face from the shared bean.** Changing one transport to stop delegating still passes a check on that face alone, the pattern's own negative witness, while a cross-face comparison fails.
+- **Forcing truly different operations through one method.** A REST endpoint and a GraphQL query answering meaningfully different questions about the same entity gain nothing from a shared method; it only fakes a consistency that was never there.
 
 ## When not to use it
 
