@@ -1,0 +1,44 @@
+name: apa-21
+
+include:
+  - path: ../_infra/compose.yaml
+  - path: ../_infra/compose.lgtm.yaml
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: 21-replayable-agent-memory-event-sourced-audit/Containerfile
+    container_name: apa-replayable-agent-memory-event-sourced-audit
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      CAMEL_COMPONENT_KAFKA_BROKERS: kafka:9094
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+      # Demo code: true lets POST /audit/demo/mutate overwrite a committed projection row in
+      # place, the negative witness in verify.sh. false (the default) rejects the call.
+      AUDIT_MUTABLE: ${AUDIT_MUTABLE:-false}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      apicurio:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+networks:
+  apa:
+    name: apa
