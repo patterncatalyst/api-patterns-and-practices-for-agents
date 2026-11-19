@@ -1,0 +1,124 @@
+---
+openapi: 3.1.0
+components:
+  schemas:
+    OrderCreateRequest:
+      type: object
+      required:
+      - customerId
+      - itemSku
+      - quantity
+      - amount
+      properties:
+        customerId:
+          type: string
+          description: The ordering customer's id.
+        itemSku:
+          type: string
+          description: The ordered item's SKU.
+        quantity:
+          type: integer
+          format: int32
+          description: How many units of the item.
+        amount:
+          type: number
+          description: "The order total, two decimals."
+    OrderResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: The order id.
+        customerId:
+          type: string
+          description: The ordering customer's id.
+        itemSku:
+          type: string
+          description: The ordered item's SKU.
+        quantity:
+          type: integer
+          format: int32
+          description: How many units of the item.
+        amount:
+          type: number
+          description: "The order total, two decimals."
+        status:
+          type: string
+          description: The order's lifecycle state.
+          enum:
+          - PLACED
+          - PAID
+          - SHIPPED
+          - DELIVERED
+          - CANCELLED
+    Problem:
+      type: object
+      properties:
+        title:
+          type: string
+          description: "A short, human-readable summary of the problem."
+        status:
+          type: integer
+          format: int32
+          description: The HTTP status code.
+        detail:
+          type: string
+          description: A detail specific to this occurrence of the problem.
+paths:
+  /orders:
+    post:
+      summary: Place a new order.
+      description: Creates an order and publishes OrderPlaced. Every field in the
+        request body is required.
+      operationId: placeOrder
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderCreateRequest"
+        required: true
+      responses:
+        "201":
+          description: The order was placed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "400":
+          description: The request is invalid.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+      tags:
+      - Order Resource
+  /orders/{id}:
+    get:
+      summary: Look up an order by id.
+      description: "Returns the order's current state, including its lifecycle status."
+      operationId: getOrder
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: The order was found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "404":
+          description: No order exists with the given id.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+      tags:
+      - Order Resource
+info:
+  title: Order Service
+  version: 1.0.0
+  description: "Agent-facing order service: place an order and look one up by id."

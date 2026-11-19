@@ -38,6 +38,8 @@ appendices only (see CLAUDE.md).
 | grafana/otel-lgtm | docker.io/grafana/otel-lgtm:0.41.0 | 2026-11-18 | |
 | Ruby image / Jekyll | docker.io/library/ruby:4.0.9 / Jekyll 4.4.1 | 2026-11-18 | Site build container. |
 | Newman | pinned at Part 5 (scripted non-interactive consumption) | | Not yet surveyed; r08-equivalent. |
+| quarkus-smallrye-openapi | platform-managed by quarkus-bom 3.40.1.2 | 2026-11-18 | New r04 dependency (ch07, ch08): generates OpenAPI 3.1.0 from annotations, no separate pin. |
+| quarkus-rest-qute | platform-managed by quarkus-bom 3.40.1.2 | 2026-11-18 | New r04 dependency (ch08): serves the Qute-templated human portal from a Quarkus REST resource; pulls in `quarkus-qute` transitively, same platform version, no separate pin. |
 
 ## OTel GenAI semantic conventions
 
