@@ -6,6 +6,15 @@ description: "One intent-named endpoint performs a whole business operation atom
 duration: "25 minutes"
 ---
 
+## Learning objectives
+
+- Collapse a chatty, CRUD-shaped sequence into one intent-named endpoint that performs the whole operation atomically.
+- Model the REST resource to `direct:` route to saga boundary, so the HTTP layer never runs the transaction itself.
+- Reject a cancellation on an order that is not cancellable with 409, and on an unknown order id with 404.
+- Recognize an observable half-done state between two separate calls as the negative witness this pattern removes.
+
+## Why this matters
+
 A human workflow that cancels an order and refunds its payment is usually two
 screens and two clicks, far enough apart in time that nobody notices the gap
 between them. An agent given the same job over a CRUD-shaped API has to issue
@@ -119,6 +128,12 @@ Try:
   updates, then rerun: the order moves alone and the payment never does.
 - Cancel the same order twice: the second call is rejected with 409 instead
   of running again.
+
+## Anti-patterns
+
+- **Chatty CRUD with an observable half-done window.** Updating the order and creating the refund as two separate calls leaves a state no business rule intended, readable in between.
+- **Committing the two updates outside one transaction.** The pattern's own negative witness: the order update commits alone, auto-committed, and the payment update never runs, leaving the order CANCELLED and the payment COMPLETED.
+- **One intent endpoint overloaded with flags for operations that are not one transaction.** Growing branching logic inside the endpoint to cover every combination a caller might want just relocates the chattiness it was meant to remove.
 
 ## When not to use it
 
