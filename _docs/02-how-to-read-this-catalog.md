@@ -6,6 +6,15 @@ description: "The anatomy every pattern page shares, the forces every pattern tr
 duration: "20 minutes"
 ---
 
+## Learning objectives
+
+- Use the shared pattern form to read any entry in this catalog on the same terms.
+- Read the seven forces an entry declares and judge which it resolves and which it trades away.
+- Place an entry on the lifecycle axis, then on the synchronous-versus-asynchronous axis inside it.
+- Invoke the named principles and anti-patterns by name instead of re-deriving them on every page.
+
+## Why this matters
+
 A pattern catalog only works if every entry answers the same questions in the
 same order, so two entries can be compared on the same terms instead of read
 as unrelated essays. What follows is the apparatus this catalog uses: the
