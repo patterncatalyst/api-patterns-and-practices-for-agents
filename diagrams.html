@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Diagrams
-description: "Every figure in the book on one page, with its editable Excalidraw source."
+description: "Every figure from the book on one page, with its editable Excalidraw source."
 permalink: /diagrams/
 ---
 
@@ -23,8 +23,9 @@ permalink: /diagrams/
     <span class="hero__eyebrow">Diagrams</span>
     <h1>Every figure, on one page.</h1>
     <p class="hero__lead">
-      Each figure renders inline and ships a paired <code>.excalidraw</code>
-      source you can open on excalidraw.com and edit.
+      The 28 diagrams from API Patterns and Practices for Agents, in reading order. Each one renders
+      inline here and ships a paired <code>.excalidraw</code> source you can
+      open on excalidraw.com and edit.
     </p>
   </div>
 </section>
@@ -32,13 +33,34 @@ permalink: /diagrams/
 <section class="section">
   <div class="container">
     <div class="diagram-gallery">
-      {%- assign figures = site.static_files | where_exp: "f", "f.path contains '/assets/diagrams/'" | where: "extname", ".svg" | sort: "path" -%}
-      {%- for f in figures -%}
-        {%- include excalidraw.html file=f.basename alt=f.basename caption=f.basename -%}
-      {%- endfor -%}
+      {%- include excalidraw.html file="00-the-two-stacks" alt="The application compose stack (Kafka, PostgreSQL, Apicurio, Keycloak, Ollama) and the separate observability compose stack (Grafana LGTM), with the request path and the OTLP path between them" caption="Figure 0.1: Two stacks, started and stopped independently" -%}
+      {%- include excalidraw.html file="01-contract-contrast" alt="The bad granular contract costs five tool calls, two argument errors and 3185 tokens and never completes the refund; the good intent tool costs one call and 759 tokens and completes it" caption="Figure 1.1: Same task, same model, two contracts" -%}
+      {%- include excalidraw.html file="02-pattern-form" alt="The sections of one catalog entry in order: Name, Problem, Solution, How Quarkus and Camel model it, Build run observe ending in a negative witness, When not to use it, References, with an optional cross-stack callout" caption="Figure 2.1: The anatomy of one catalog entry" -%}
+      {%- include excalidraw.html file="02-taxonomy" alt="Lifecycle (build, consume, test, ship, run) as the primary axis, sync versus async as the secondary axis inside build, and the seven forces as the third dimension every entry declares" caption="Figure 2.2: Lifecycle, then sync or async, then the forces on every entry" -%}
+      {%- include excalidraw.html file="03-intent-endpoint" alt="Chatty CRUD cancels the order and refunds the payment as two calls with a crash window between them; the intent endpoint moves both in one call, one transaction" caption="Figure 3.1: One business operation, atomic or not" -%}
+      {%- include excalidraw.html file="04-search-over-pagination" alt="A raw pagination sweep pulling six pages to find three matching rows, versus one typed search call that isolates the same three rows directly" caption="Figure 4.1: Same 60-row table, two ways to find 3 rows" -%}
+      {%- include excalidraw.html file="05-batch-and-count" alt="Ten single-id GETs and a fetch-all count on one side, one batch-get call and one count-flag call on the other, with the measured call counts and byte totals" caption="Figure 5.1: Two shapes, two measured contrasts, same table" -%}
+      {%- include excalidraw.html file="06-idempotency" alt="A retried POST with no idempotency key creates a duplicate order and event; the same retry carrying an Idempotency-Key replays the stored response with a single effect" caption="Figure 6.1: Safety comes from the server's own guard, not caller discipline" -%}
+      {%- include excalidraw.html file="07-self-describing-contract" alt="A hand-maintained contract loses its enum, required fields and operationId over time; a contract generated from annotated code on every build carries all three because there is nothing else to fall out of sync" caption="Figure 7.1: A generated contract cannot drift from the code, because it is the code" -%}
+      {%- include excalidraw.html file="08-dual-use-portal" alt="Two independently maintained write-ups of the same API drift apart over time; one shared metadata bean rendering both the plain-text and HTML surfaces keeps them naming exactly the same operations" caption="Figure 8.1: One source, two renderings, never two sources" -%}
+      {%- include excalidraw.html file="09-agent-bff" alt="The full payload wrapped under a friendlier name still carries every heavy and internal field; a purpose-built projection, read by its own narrow query, carries only what the task needs, and GraphQL field selection narrows it further still" caption="Figure 9.1: Reshape the read, do not just rename the response" -%}
+      {%- include excalidraw.html file="10-instructive-error" alt="An opaque error returns a bare status code with nothing an agent can act on; an RFC 9457 problem response names what was wrong and a remedy specific to it, such as the current state and the transitions still allowed" caption="Figure 10.1: A remedy is not the same information as a status code" -%}
+      {%- include excalidraw.html file="11-propose-preview-commit" alt="A fire-and-forget write commits the moment it is called, with no way to see the effect first; the same intent endpoint with a dryRun flag returns a structured review with zero writes, a commit applies it, and a REJECTED_BY_USER decision is a graceful no-op" caption="Figure 11.1: See the effect before it becomes permanent" -%}
+      {%- include excalidraw.html file="12-mcp-first-bean" alt="Three faces reimplementing the same read independently can drift from each other silently; three faces delegating to one shared CDI bean return the same result by construction, because there is only one implementation to call" caption="Figure 12.1: One bean behind three transports never drifts, because it never duplicates" -%}
+      {%- include excalidraw.html file="13-mcp-triad" alt="A naive 1:1 API-to-MCP wrap leaves an agent to call three separate tools and assemble the answer itself; the tool/resource/prompt triad composes the same three reads into one tool response, backs it with a resource fetched once, and a prompt reading the same composed data" caption="Figure 13.1: Compose for the question, not for the endpoint" -%}
+      {%- include excalidraw.html file="14-domain-split-discovery" alt="Two small, domain-namespaced servers keep each tools/list short; a shared catalog resource holds the full twenty-operation set, with searchTools resolving a query to either a live tool or a catalog-only operation" caption="Figure 14.1: Small live toolsets, a shared catalog for the rest" -%}
+      {%- include excalidraw.html file="15-reshape-grpc" alt="A separate gRPC payment-service image sits behind an MCP tool facade; the facade reshapes a decimal amount to int64 cents on the way in and back to decimal on the way out, and turns a gRPC status into an instructive tool error instead of leaking the protocol across" caption="Figure 15.1: Reshape at the boundary, never wrap a heterogeneous protocol through unchanged" -%}
+      {%- include excalidraw.html file="16-gated-mcp-tools" alt="Three stacked guards in front of a two-tool MCP surface: an unauthenticated call is rejected before the MCP dispatcher runs, a role gates the read, and a scope plus an Elicitation confirm gate the write" caption="Figure 16.1: Each tool adds its own requirement on top of the endpoint's own gate" -%}
+      {%- include excalidraw.html file="17-event-triggered-wakeup" alt="A poll loop either sits idle on a timer or finds out late; the Camel Kafka consumer on apa.payments.processed wakes the agent's own call path the instant a payment is processed, and the tool call it makes is what the checks observe" caption="Figure 17.1: The event wakes the agent; the tool call it makes is what the checks observe" -%}
+      {%- include excalidraw.html file="18-multi-agent-choreography" alt="Three agents coordinate only through events on shared topics, with no orchestrator; dropping the one link between shipping and notification stalls exactly that hop, leaving the earlier two agents' own work untouched" caption="Figure 18.1: Cutting one link stalls one hop; the agents before it finish their own work regardless" -%}
+      {%- include excalidraw.html file="19-hitl-gate" alt="The gate timeline from trigger to agent classification to a held PENDING row to a human decision that resumes it exactly once, compared against three other mechanisms for the same pattern across wait duration, durability, in-session versus out-of-band and who holds the state" caption="Figure 19.1: A Kafka gate durably outlasts a restart, at the cost of answering out-of-band" -%}
+      {%- include excalidraw.html file="20-saga-compensation" alt="The outer Camel Saga block runs three nested steps in order, reserve stock, take payment, an agent books a carrier; a declined payment throws, and the saga compensates every step enlisted so far, in reverse order" caption="Figure 20.1: Every compensation is a guarded, idempotent UPDATE: calling it twice changes nothing the second time" -%}
+      {%- include excalidraw.html file="21-event-sourced-audit" alt="An append-only Kafka log folds into a live projection; a replay reads the same log from the beginning and must reproduce it exactly, while a direct mutation that bypasses the log breaks that agreement until the live projection is rebuilt from the untouched log" caption="Figure 21.1: The log is the durable record; rebuilding live from it erases a direct mutation's effect" -%}
+      {%- include excalidraw.html file="22-mcp-client-lifecycle" alt="Claude Code picks up the committed .mcp.json and negotiates initialize, tools/list, resources/list and prompts/list against a packaged MCP tool server; a scripted JSON-RPC client drives the identical lifecycle as a deterministic, repeatable check, and a tool absent from tools/list is rejected rather than driven" caption="Figure 22.1: The same client lifecycle, driven by a human session and by a deterministic script" -%}
+      {%- include excalidraw.html file="23-skill-dual-channel" alt="SKILL.md with frontmatter plus references/ and scripts/ is read directly from the repo as a project skill, and the same directory is packaged by package-skill.sh into a .skill zip bundle for distribution elsewhere; order-status.sh checks tools/list before calling an operation and refuses one absent from it" caption="Figure 23.1: One skill directory, two distribution channels, one script that refuses to fabricate" -%}
+      {%- include excalidraw.html file="24-captured-tool-result" alt="The model's own retelling of a tool result is nondeterministic and unverifiable; the framework's captured tool-execution result is read and parsed server side before any model prose touches it, and the recorded tracking number is a value the model has no way to produce except by actually reaching the remote tool" caption="Figure 24.1: The durable record comes from the captured tool result, never from the model's own retelling of it" -%}
+      {%- include excalidraw.html file="25-consuming-the-async-side" alt="A disabled consumer leaves a delivered event sitting unconsumed on its topic, never lost; the active consumer wakes a composing agent, builds the durable record from the event's own fields and writes it under a conflict guard keyed on order id and event type, so a redelivered event adds no second row" caption="Figure 25.1: The event wakes the agent; the record it writes is keyed so a repeat of the same event is a safe no-op" -%}
+      {%- include excalidraw.html file="26-decision-rule-review" alt="An agent proposes a refund; DecisionRuleReviewer evaluates it against the committed rule's ordered clauses and records APPROVE or REJECT with the failed clause; pointing the same reviewer at the weakened rule, with the amount-ceiling clause removed, flips the identical violating proposal from REJECT to APPROVE, and restoring the rule rejects it again" caption="Figure 26.1: The proposal varies; the committed rule and its verdict do not" -%}
     </div>
-    {%- if figures.size == 0 -%}
-    <p class="section-sub"><em>Figures arrive with their chapters.</em></p>
-    {%- endif -%}
   </div>
 </section>

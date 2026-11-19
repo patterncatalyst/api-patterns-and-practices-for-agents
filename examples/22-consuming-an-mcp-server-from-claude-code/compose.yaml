@@ -1,0 +1,41 @@
+name: apa-22
+
+include:
+  - path: ../_infra/compose.yaml
+  - path: ../_infra/compose.lgtm.yaml
+
+services:
+  # The target: ch13's MCP tool server, built from its own Containerfile and build context
+  # (examples/, so it can install the shared domain model first, exactly like ch13's own
+  # compose.yaml). Reused unchanged; this example never copies or forks its code. Published to
+  # the host (unlike ch24's non-published reuse) because a local Claude Code process, not another
+  # container on this network, is the consumer: .mcp.json points at this same host:port.
+  package-api-as-mcp-tools:
+    build:
+      context: ..
+      dockerfile: 13-package-api-as-mcp-tools/Containerfile
+    container_name: apa-22-package-api-as-mcp-tools
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+    depends_on:
+      postgres:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+networks:
+  apa:
+    name: apa

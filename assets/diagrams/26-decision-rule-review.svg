@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 500" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="30" y="40" width="1000" height="150" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="42" y="60" font-size="12" font-weight="700" fill="#888">POST /review: proposal + order facts</text>
+<rect x="60" y="220" width="460" height="180" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="72" y="240" font-size="12" font-weight="700" fill="#888">Real rule: contracts/26-refund-review-rule.json</text>
+<rect x="570" y="220" width="460" height="180" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="582" y="240" font-size="12" font-weight="700" fill="#888">Weakened rule (witness only)</text>
+<rect x="60" y="80" width="460" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="290.0" y="103.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">RefundProposalRun</text>
+<text x="290.0" y="120.0" font-size="11.5" fill="#555555" text-anchor="middle">refundAmount, reason, orderStatus, orderPaidAmount</text>
+<rect x="560" y="80" width="460" height="50" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="790.0" y="103.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">DecisionRuleReviewer.evaluate</text>
+<text x="790.0" y="120.0" font-size="11.5" fill="#555555" text-anchor="middle">plain switch, no model, no rule engine</text>
+<rect x="80" y="260" width="420" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="290.0" y="281.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">amount-exceeds-paid, order-not-refundable,</text>
+<text x="290.0" y="298.0" font-size="11.5" fill="#555555" text-anchor="middle">reason-not-allowed, in order</text>
+<rect x="80" y="320" width="420" height="46" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="290.0" y="341.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">violating proposal: REJECT</text>
+<text x="290.0" y="358.0" font-size="11.5" fill="#555555" text-anchor="middle">failedClause = amount-exceeds-paid</text>
+<rect x="590" y="260" width="420" height="46" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="800.0" y="281.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">order-not-refundable, reason-not-allowed only</text>
+<text x="800.0" y="298.0" font-size="11.5" fill="#555555" text-anchor="middle">amount-ceiling clause removed</text>
+<rect x="590" y="320" width="420" height="46" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="800.0" y="341.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">SAME violating proposal: APPROVE</text>
+<text x="800.0" y="358.0" font-size="11.5" fill="#555555" text-anchor="middle">wrongly, since no clause catches it</text>
+<rect x="30" y="420" width="1000" height="60" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="530.0" y="448.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">ReviewRecorder writes an append-only review.reviews row for every verdict.</text>
+<text x="530.0" y="465.0" font-size="11.5" fill="#555555" text-anchor="middle">Restoring the real rule path rejects the identical proposal again, naming the same clause.</text>
+<path d="M290,130 L290,170" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M290,170 L790,170" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M790,130 L790,170" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M290,306 L290,320" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M800,306 L800,320" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="530" y="26" font-size="15" fill="#444444" text-anchor="middle" font-weight="700">The proposal varies; the committed rule and its verdict do not</text>
+</svg>

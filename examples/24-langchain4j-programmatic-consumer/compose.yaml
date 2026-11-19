@@ -1,0 +1,73 @@
+name: apa-24
+
+include:
+  - path: ../_infra/compose.yaml
+  - path: ../_infra/compose.lgtm.yaml
+
+services:
+  # The target: ch13's MCP tool server, built from its own Containerfile and build context
+  # (examples/, so it can install the shared domain model first, exactly like ch13's own
+  # compose.yaml). Reused unchanged; this example never copies or forks its code.
+  package-api-as-mcp-tools:
+    build:
+      context: ..
+      dockerfile: 13-package-api-as-mcp-tools/Containerfile
+    container_name: apa-24-package-api-as-mcp-tools
+    environment:
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+    depends_on:
+      postgres:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+  # The programmatic consumer: a @RegisterAiService method annotated @McpToolBox("apa-orders")
+  # consumes package-api-as-mcp-tools's tools as remote tools over Streamable HTTP.
+  app:
+    build:
+      context: ..
+      dockerfile: 24-langchain4j-programmatic-consumer/Containerfile
+    container_name: apa-langchain4j-programmatic-consumer
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+      QUARKUS_LANGCHAIN4J_OLLAMA_BASE_URL: http://ollama:11434
+      # Demo code: the negative witness. Left at its default, the AiService's @McpToolBox("apa-orders")
+      # reaches the real package-api-as-mcp-tools server. Overridden with a wrong path (no server
+      # answers at it), the model can never reach the remote orderStatus tool, so it has no way to
+      # learn ch13's seeded tracking number and no recorded row can carry it.
+      QUARKUS_LANGCHAIN4J_MCP_APA_ORDERS_URL: ${MCP_APA_ORDERS_URL:-http://package-api-as-mcp-tools:8080/mcp}
+    depends_on:
+      package-api-as-mcp-tools:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+networks:
+  apa:
+    name: apa

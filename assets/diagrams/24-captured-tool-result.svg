@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 460" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="30" y="40" width="460" height="330" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="42" y="60" font-size="12" font-weight="700" fill="#888">Reading the model&#x27;s own prose (not used here)</text>
+<rect x="570" y="40" width="460" height="330" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="582" y="60" font-size="12" font-weight="700" fill="#888">Reading the captured tool result</text>
+<rect x="60" y="80" width="400" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="260.0" y="103.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">agent.consume(...) returns a sentence</text>
+<text x="260.0" y="120.0" font-size="11.5" fill="#555555" text-anchor="middle">describing what it says the tool returned</text>
+<rect x="60" y="160" width="400" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="260.0" y="183.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">nondeterministic: can compress, misstate</text>
+<text x="260.0" y="200.0" font-size="11.5" fill="#555555" text-anchor="middle">or omit a field the tool actually returned</text>
+<rect x="600" y="80" width="400" height="46" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="800.0" y="101.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">OrderStatusConsumerAgent.consume</text>
+<text x="800.0" y="118.0" font-size="11.5" fill="#555555" text-anchor="middle">@McpToolBox(&quot;apa-orders&quot;), returns Result&lt;String&gt;</text>
+<rect x="600" y="150" width="400" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="800.0" y="171.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">remote orderStatus tool</text>
+<text x="800.0" y="188.0" font-size="11.5" fill="#555555" text-anchor="middle">a packaged MCP tool server, over Streamable HTTP</text>
+<rect x="600" y="220" width="400" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="800.0" y="241.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Result.toolExecutions()</text>
+<text x="800.0" y="258.0" font-size="11.5" fill="#555555" text-anchor="middle">the exact text the remote tool returned, captured</text>
+<rect x="600" y="290" width="400" height="50" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="800.0" y="313.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">OrderStatusRecorder.recordConsultation</text>
+<text x="800.0" y="330.0" font-size="11.5" fill="#555555" text-anchor="middle">parses status + tracking number, writes the row</text>
+<rect x="30" y="390" width="1000" height="50" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="530.0" y="420.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">A broken connection to the remote tool leaves the row without the seeded tracking number, whether the model writes nothing or invents a plausible reply.</text>
+<path d="M260,130 L260,160" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M800,126 L800,150" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M800,196 L800,220" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M800,266 L800,290" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="530" y="26" font-size="15" fill="#444444" text-anchor="middle" font-weight="700">The durable record comes from the captured tool result, never the model&#x27;s retelling of it</text>
+</svg>
