@@ -1,0 +1,93 @@
+name: apa-32
+
+include:
+  - path: ../_infra/compose.yaml
+  - path: ../_infra/compose.lgtm.yaml
+
+services:
+  # Gate (a) target 1: ch07's strict self-describing contract service, built unchanged from its own
+  # Containerfile and build context (examples/, so it installs the shared domain model first). Reused,
+  # never copied. Published to the host (127.0.0.1:8080) so verify.sh can curl /q/openapi directly;
+  # the Schemathesis container reaches it by its compose service DNS name on the apa network instead.
+  strict-self-describing-contract:
+    build:
+      context: ..
+      dockerfile: 07-strict-self-describing-contract/Containerfile
+    container_name: apa-32-strict-self-describing-contract
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      CAMEL_COMPONENT_KAFKA_BROKERS: kafka:9094
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      # ch07 and ch13 both own the orders schema and the orders.orders table, so they cannot share
+      # one database: the second app's Flyway would validate against the first's flyway_schema_history
+      # and exit. This harness gives ch07 its own Postgres, the same isolation ch27 uses.
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres-contract:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres-contract:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+  # Gate (a) target 2: ch13's package-api-as-mcp-tools server, built unchanged from its own
+  # Containerfile and build context (examples/). Published on a non-infra host port (127.0.0.1:8088)
+  # so verify.sh can drive the MCP handshake and tools/list over Streamable HTTP.
+  package-api-as-mcp-tools:
+    build:
+      context: ..
+      dockerfile: 13-package-api-as-mcp-tools/Containerfile
+    container_name: apa-32-package-api-as-mcp-tools
+    ports:
+      - "127.0.0.1:8088:8080"
+    environment:
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+    depends_on:
+      postgres:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+  # A dedicated Postgres for ch07, so its Flyway history and its orders.orders table never collide
+  # with ch13's on the shared stack Postgres. Plain postgres image, no persistence needed for a gate run.
+  postgres-contract:
+    image: docker.io/library/postgres:18.6
+    container_name: apa-32-postgres-contract
+    environment:
+      POSTGRES_DB: apa
+      POSTGRES_USER: apa
+      POSTGRES_PASSWORD: apa
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apa -d apa"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    networks: [apa]
+
+networks:
+  apa:
+    name: apa

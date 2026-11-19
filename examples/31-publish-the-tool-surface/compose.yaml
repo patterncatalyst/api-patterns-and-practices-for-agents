@@ -1,0 +1,35 @@
+name: apa-31
+
+include:
+  - path: ../_infra/compose.yaml
+  - path: ../_infra/compose.lgtm.yaml
+
+services:
+  app:
+    # No explicit image: tag here; verify.sh re-tags the built image as
+    # publish-the-tool-surface:$VERSION (the pom's own version) once it exists, so the exact
+    # image id running detached in this service is the same one `docker run -i` drives for the
+    # stdio one-shot: one build, one image id, two ways to run it.
+    build:
+      context: ..
+      dockerfile: 31-publish-the-tool-surface/Containerfile
+    container_name: apa-publish-the-tool-surface
+    ports:
+      - "127.0.0.1:8089:8080"
+    environment:
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+    depends_on:
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+networks:
+  apa:
+    name: apa
