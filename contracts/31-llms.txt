@@ -1,0 +1,11 @@
+# Publish the Tool Surface
+
+> Agent-facing order status tools, orderStatus, paymentStatus and shipmentTracking, served over Streamable HTTP, stdio and llms.txt from one versioned build.
+
+Version: 1.0.0
+
+## Tools
+
+- orderStatus: Get an order's composed status: its own state, its payment status and amount, and its shipment carrier, tracking number and status, all in one response. Use this instead of calling the order, payment and shipment reads separately.
+- paymentStatus: Get only the payment status and amount for an order id, with nothing about the order's own state or its shipment.
+- shipmentTracking: Get only the shipment carrier, tracking number and status for an order id, with nothing about the order's own state or its payment.
