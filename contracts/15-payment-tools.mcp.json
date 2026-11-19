@@ -1,0 +1,6 @@
+[
+  {
+    "_placeholder": true,
+    "_note": "Best-effort draft, not yet captured from a live run. quarkus-mcp-server-http's exact JSON Schema generation (property order and $schema framing) for takePayment/refundPayment's inputSchema can only be confirmed by running verify.sh against the live stack. The orchestrator's live two-image verification run must replace this file's contents with the actual served `tools/list` result (`jq '.result.tools' <response>`) before the 'committed contract matches served' check in verify.sh will pass."
+  }
+]
