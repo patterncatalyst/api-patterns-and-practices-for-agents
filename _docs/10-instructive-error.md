@@ -6,6 +6,15 @@ description: "An RFC 9457 problem response names what was wrong and what to try 
 duration: "20 minutes"
 ---
 
+## Learning objectives
+
+- Map each domain failure to an RFC 9457 problem response, not a bare status code.
+- Add a remedy member specific to each failure kind, naming what a caller can legally try next.
+- Compute allowed transitions from the lifecycle rule itself, never a hardcoded list that can fall out of sync.
+- Keep every mapped problem type pairwise distinct so an agent can branch on which one it received.
+
+## Why this matters
+
 A human who hits an error reads the surrounding page, checks a log, or asks
 a colleague; an agent has only the text the error response actually
 contains. A bare status code with no remedy gives that agent exactly one
@@ -105,6 +114,12 @@ Try:
   case returns a bare 500 as `text/plain` instead of its mapped problem.
 - Cancel the seeded `SHIPPED` order and inspect the 409 body: it names
   `DELIVERED` as the only state still reachable from here.
+
+## Anti-patterns
+
+- **An opaque bare status code with no remedy.** Telling an agent only that a call failed, with nothing to decide what to try next, turns a fixable field into a dead end.
+- **Falling through to the framework's default handler.** Removing a mapper lets a domain exception reach a generic 500 served as `text/plain`, the pattern's own negative witness of what a missing mapping degrades to.
+- **A remedy that drifts out of sync with the lifecycle rule.** A hardcoded list of allowed transitions, instead of one computed from the rule itself, tells a caller something untrue with confidence once the rule changes.
 
 ## When not to use it
 

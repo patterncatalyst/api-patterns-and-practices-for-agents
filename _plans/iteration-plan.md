@@ -96,17 +96,18 @@ squash-merged on the owner's OK, tagged `rNN.x`, notes-only release.
 | Iter | Scope | Chapters | Status |
 |---|---|---|---|
 | r01 | Repo, Jekyll site, CLAUDE.md, `_plans`, tooling, CI, contracts and examples infra skeleton | none (skeleton + plan only) | done (this release, stop for review) |
-| r02 | Part 0 + wired compose stack (+Keycloak) + `examples/domain-model` module + 00-stack-check | 00 to 02 | next |
-| r03 | Build/sync, batch | 03 to 06 | |
-| r04 | Build/sync, contracts and errors | 07 to 12 | |
-| r05 | Build/MCP packaging | 13 to 16 | |
-| r06 | Build/async | 17 to 21 | |
-| r07 | Consume (+ skills/ consuming skill) | 22 to 26 | |
-| r08 | Test and automate | 27 to 30 | |
-| r09 | Ship | 31 to 32 | |
-| r10 | Run: observability, auditing, guardrails | 33 to 36 | |
-| r11 | Run: Kubernetes + final project | 37 to 38 | |
-| r12 | Appendices A, C, D, E, F | A, C, D, E, F | |
-| r13 | Appendix B (OpenShift Local) | B | |
-| r14 | Retro: idiomatic review, voice review, QA sweep, host scrub, full fresh re-run | all | |
-| r15 | The deck (decks-last) | none | |
+| r02 | Part 0 + wired compose stack (+Keycloak) + `examples/domain-model` module + 00-stack-check | 00 to 02 | done |
+| r03 | Build/sync, batch | 03 to 06 | done |
+| r04 | Build/sync, contracts and errors | 07 to 12 | done |
+| r05 | Build/MCP packaging | 13 to 16 | done |
+| r06 | EIP-Camel chapter-layout retrofit (Learning objectives, Why this matters, Anti-patterns spine) across 00 to 12; 13 to 16 already compliant; `scripts/validate.py` enforcement (`check_chapter_spine`) | 00 to 16 (retrofit, no new chapters) | done (this release) |
+| r07 | Build/async | 17 to 21 | |
+| r08 | Consume (+ skills/ consuming skill) | 22 to 26 | |
+| r09 | Test and automate | 27 to 30 | |
+| r10 | Ship | 31 to 32 | |
+| r11 | Run: observability, auditing, guardrails | 33 to 36 | |
+| r12 | Run: Kubernetes + final project | 37 to 38 | |
+| r13 | Appendices A, C, D, E, F | A, C, D, E, F | |
+| r14 | Appendix B (OpenShift Local) | B | |
+| r15 | Retro: idiomatic review, voice review, QA sweep, host scrub, full fresh re-run | all | |
+| r16 | The deck (decks-last) | none | |

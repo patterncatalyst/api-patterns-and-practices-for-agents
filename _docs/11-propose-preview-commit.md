@@ -6,6 +6,15 @@ description: "A preview step lets an agent see the effect of a write before comm
 duration: "25 minutes"
 ---
 
+## Learning objectives
+
+- Put a `dryRun` flag on the same intent endpoint instead of a separate preview path.
+- Return a structured review that writes nothing and emits no event on a preview call.
+- Treat `REJECTED_BY_USER` as a graceful no-op distinct from an error.
+- Recognize a missing dry-run guard, where a preview silently commits, as the negative witness this pattern removes.
+
+## Why this matters
+
 An agent about to cancel an order and refund its payment cannot undo that
 action once it runs. The only safe way to let an agent reach a decision like
 that with confidence is to let it see the effect first, on the same
@@ -101,6 +110,12 @@ Try:
   rejected as a duplicate.
 - Preview an order twice in a row and inspect both responses: the second
   preview reports the same unchanged state as the first.
+
+## Anti-patterns
+
+- **A commit-only endpoint.** Forcing an agent to run an irreversible action speculatively just to see its effect leaves no way to inspect a write before it becomes permanent.
+- **Dropping the dry-run guard.** Letting every request fall through to commit regardless of `dryRun` silently cancels the order the caller only meant to preview, the pattern's own negative witness.
+- **A preview whose computed effect diverges from the commit's actual effect.** The review has to run the same guard and compute the same result the commit path produces, or the preview starts lying about what committing will do.
 
 ## When not to use it
 

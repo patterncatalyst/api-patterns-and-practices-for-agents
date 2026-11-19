@@ -6,6 +6,15 @@ description: "The tools, exact pins and two local stacks every example in this c
 duration: "30 minutes"
 ---
 
+## Learning objectives
+
+- Install the toolchain: Docker Engine and its compose plugin, plus SDKMAN's JDK, Maven, JBang and Quarkus CLI.
+- Bring up and tear down the two independent compose stacks without one depending on the other.
+- Lay out and run an example against its exact pins, with a fresh-state `verify.sh` and a negative witness.
+- Read the OTLP traces, metrics and logs an example produces in Grafana.
+
+## Why this matters
+
 Every example in this catalog runs on two local Docker Compose stacks, started
 and stopped independently. The application stack carries the actual request:
 an HTTP call, an event on Kafka, or a tool call from an agent. The
@@ -217,6 +226,12 @@ Try:
   from the stack-check service.
 - Remove the route's validation guard and rerun: the invalid order now
   succeeds instead of getting rejected.
+
+## Anti-patterns
+
+- **Docker Desktop or podman, in place of Docker Engine and its compose plugin.** Both diverge from the engine every example here is written and verified against.
+- **Running as root, or needing sudo, for any container or host operation.** Adding the local user to the `docker` group removes the need; nothing here touches host firewall, kernel or network settings.
+- **A floating or `latest` tag in place of an exact pin, or reusing containers and volumes between runs.** Every live run starts from `down -v --remove-orphans`, so a pin drifts only when the table above records a reason to move it.
 
 ## References
 
