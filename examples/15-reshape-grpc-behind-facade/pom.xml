@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.patterncatalyst.agentapi</groupId>
+  <artifactId>reshape-grpc-behind-facade</artifactId>
+  <version>1.0.0</version>
+  <packaging>pom</packaging>
+  <name>Reshape not wrap: gRPC payment service behind the MCP facade (aggregator)</name>
+  <description>
+    Chapter 15 ships two images: a separate gRPC payment-service and the MCP facade that reshapes
+    JSON tool arguments into Protobuf and calls it. This aggregator builds and tests both modules
+    with one `mvn verify`; each image is still built from its own Containerfile. The modules are
+    independent (neither inherits from this pom); it aggregates them only so the example builds and
+    verifies as a unit.
+  </description>
+
+  <modules>
+    <module>payment-service</module>
+    <module>mcp-facade</module>
+  </modules>
+</project>
