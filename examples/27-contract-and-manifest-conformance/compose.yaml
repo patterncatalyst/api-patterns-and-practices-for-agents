@@ -1,0 +1,73 @@
+name: apa-27
+
+include:
+  - path: ../_infra/compose.yaml
+  - path: ../_infra/compose.lgtm.yaml
+
+services:
+  # The REST surface under test: ch07's strict self-describing contract service, built from its own
+  # Containerfile and build context (examples/, so it installs the shared domain model first, exactly
+  # like ch07's own compose.yaml). Reused unchanged; this harness never copies or forks its code.
+  # Published to the host (127.0.0.1:8080) so verify.sh can curl /q/openapi directly; the Schemathesis
+  # container reaches it by its compose service DNS name on the apa network, not through a host port.
+  strict-self-describing-contract:
+    build:
+      context: ..
+      dockerfile: 07-strict-self-describing-contract/Containerfile
+    container_name: apa-27-strict-self-describing-contract
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      CAMEL_COMPONENT_KAFKA_BROKERS: kafka:9094
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+  # The MCP tool surface under test: ch13's package-api-as-mcp-tools server, built from its own
+  # Containerfile and build context (examples/). Reused unchanged. Published on a non-infra host port
+  # (127.0.0.1:8088) so verify.sh can drive the MCP handshake and tools/list over Streamable HTTP.
+  package-api-as-mcp-tools:
+    build:
+      context: ..
+      dockerfile: 13-package-api-as-mcp-tools/Containerfile
+    container_name: apa-27-package-api-as-mcp-tools
+    ports:
+      - "127.0.0.1:8088:8080"
+    environment:
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+    depends_on:
+      postgres:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+networks:
+  apa:
+    name: apa
