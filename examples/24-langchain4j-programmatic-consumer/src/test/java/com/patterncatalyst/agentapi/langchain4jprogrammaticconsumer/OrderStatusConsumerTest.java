@@ -30,12 +30,12 @@ class OrderStatusConsumerTest {
     @Inject
     DataSource dataSource;
 
-    private String statusFor(String orderId, Duration wait) {
+    private String columnFor(String column, String orderId, Duration wait) {
         long end = System.nanoTime() + wait.toNanos();
         while (System.nanoTime() < end) {
             try (Connection c = dataSource.getConnection();
                     PreparedStatement select = c.prepareStatement(
-                            "SELECT order_status FROM consumer.agent_order_status_consultation WHERE order_id = ?")) {
+                            "SELECT " + column + " FROM consumer.agent_order_status_consultation WHERE order_id = ?")) {
                 select.setString(1, orderId);
                 try (ResultSet rs = select.executeQuery()) {
                     if (rs.next()) {
@@ -61,12 +61,15 @@ class OrderStatusConsumerTest {
                 .when().post("/consume")
                 .then().statusCode(200);
 
-        assertEquals("SHIPPED", statusFor("O-TEST-1", Duration.ofSeconds(10)));
+        // Both the status and the tracking number are read out of the remote tool's own JSON result,
+        // so the recorded tracking number proves the remote tool was actually reached.
+        assertEquals("SHIPPED", columnFor("order_status", "O-TEST-1", Duration.ofSeconds(10)));
+        assertEquals("FL-TEST-0001", columnFor("tracking_number", "O-TEST-1", Duration.ofSeconds(10)));
     }
 
     @Test
     void anOrderNeverConsumedHasNoRecord() {
-        assertNull(statusFor("O-NEVER-CONSUMED", Duration.ofSeconds(2)));
+        assertNull(columnFor("order_status", "O-NEVER-CONSUMED", Duration.ofSeconds(2)));
     }
 
     @Test

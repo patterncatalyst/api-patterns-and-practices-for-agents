@@ -1,7 +1,5 @@
 package com.patterncatalyst.agentapi.langchain4jprogrammaticconsumer;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
@@ -36,9 +34,6 @@ public class FixtureConsumer {
     @Inject
     OrderStatusRecorder recorder;
 
-    @Inject
-    ObjectMapper objectMapper;
-
     @ConfigProperty(name = "quarkus.langchain4j.mcp.apa-orders.url")
     String mcpUrl;
 
@@ -59,21 +54,12 @@ public class FixtureConsumer {
                     .arguments("{\"orderId\":\"" + orderId + "\"}")
                     .build();
             ToolExecutionResult result = client.executeTool(request);
-            String orderStatus = extractOrderStatus(result.resultText());
-            LOG.infof("fixture consumer: orderId=%s orderStatus=%s (direct MCP client call)", orderId, orderStatus);
-            recorder.recordConsultation(orderId, orderStatus);
+            String resultText = result.resultText();
+            LOG.infof("fixture consumer: orderId=%s result=%s (direct MCP client call)", orderId, resultText);
+            recorder.recordConsultation(orderId, resultText);
         } catch (Exception e) {
             throw new IllegalStateException(
                     "fixture consumer failed to call the remote orderStatus tool for " + orderId, e);
-        }
-    }
-
-    private String extractOrderStatus(String json) {
-        try {
-            JsonNode node = objectMapper.readTree(json);
-            return node.has("orderStatus") ? node.get("orderStatus").asText() : "UNKNOWN";
-        } catch (Exception e) {
-            throw new IllegalStateException("could not parse orderStatus tool result: " + json, e);
         }
     }
 }

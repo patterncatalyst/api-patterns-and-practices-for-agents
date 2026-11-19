@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # Starts the stack with ch13's package-api-as-mcp-tools server and this chapter's consumer, and
-# checks that POST /consume/<orderId> makes OrderStatusConsumerAgent (a @RegisterAiService method
-# annotated @McpToolBox("apa-orders")) call the REMOTE orderStatus tool over Streamable HTTP MCP,
-# then call its one local tool, OrderStatusRecorder, which writes a durable
-# consumer.agent_order_status_consultation record, increments a Micrometer counter and logs a line.
+# checks that POST /consume with an order id makes OrderStatusConsumerAgent (a @RegisterAiService
+# method annotated @McpToolBox("apa-orders")) call the REMOTE orderStatus tool over Streamable HTTP
+# MCP, then call its one local tool, OrderStatusRecorder, which reads the status and tracking number
+# out of the remote tool's own JSON result and writes a durable
+# consumer.agent_order_status_consultation row, increments a Micrometer counter and logs a line.
 # Observed by that side effect, never by the model's prose, since qwen3's tool calling is
-# nondeterministic. Includes the negative witness: with MCP_APA_ORDERS_URL pointed at a path no
-# server answers at, the agent can never reach the remote tool, so no record or counter follows.
-# KEEP=1 leaves the stack running afterwards.
+# nondeterministic. The recorded tracking number is ch13's seeded FL-778821, a value the model has
+# no way to learn except by reaching the remote tool. Includes the negative witness: with
+# MCP_APA_ORDERS_URL pointed at a path no server answers at, the agent can never reach the remote
+# tool, so no row can carry that seeded tracking number. KEEP=1 leaves the stack running afterwards.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
@@ -49,14 +51,29 @@ consume_order() { # consume_order <orderId>
     curl -sf -X POST -H 'Content-Type: text/plain' --data "$1" "$APP/consume" >/dev/null
 }
 
-consultation_status() { # consultation_status <orderId>
+# ch13 seeds exactly one order, O-9001: status SHIPPED, shipment tracking FL-778821. The tracking
+# number is the witness value: the model has no way to produce it except by actually reaching the
+# remote orderStatus tool, so a row carrying it proves the round trip, and its absence proves the
+# break. Neither depends on the model's prose.
+SEEDED_ORDER=O-9001
+SEEDED_STATUS=SHIPPED
+SEEDED_TRACKING=FL-778821
+
+consultation_column() { # consultation_column <column> <orderId>
     docker exec -e PGPASSWORD=apa apa-postgres psql -h 127.0.0.1 -U apa -d apa -tAc \
-        "SELECT order_status FROM consumer.agent_order_status_consultation WHERE order_id='$1'"
+        "SELECT $1 FROM consumer.agent_order_status_consultation WHERE order_id='$2'"
 }
-consultation_recorded() { # the live model's own wording may vary; only presence is asserted, never its prose
-    [[ -n "$(consultation_status "$1")" ]]
+clear_consultations() {
+    docker exec -e PGPASSWORD=apa apa-postgres psql -h 127.0.0.1 -U apa -d apa -c \
+        "DELETE FROM consumer.agent_order_status_consultation" >/dev/null
 }
-no_consultation() { [[ -z "$(consultation_status "$1")" ]]; }
+recorded_from_remote() { # the row carries ch13's seeded status AND unguessable tracking number
+    [[ "$(consultation_column order_status "$1")" == "$SEEDED_STATUS" \
+        && "$(consultation_column tracking_number "$1")" == "$SEEDED_TRACKING" ]]
+}
+not_recorded_from_remote() { # no row for this order carries the seeded tracking number
+    [[ "$(consultation_column tracking_number "$1")" != "$SEEDED_TRACKING" ]]
+}
 
 SVC=langchain4j-programmatic-consumer
 tempo_has_trace() {
@@ -97,33 +114,35 @@ for c in apa-kafka apa-postgres apa-apicurio apa-keycloak apa-ollama apa-lgtm \
     check "$c is healthy" healthy "$c"
 done
 
-consume_order O-9001
-check "consuming O-9001 records a status (observed in PostgreSQL, not model prose)" \
-    poll 120 consultation_recorded O-9001
+consume_order "$SEEDED_ORDER"
+check "consulting $SEEDED_ORDER records ch13's composed status and seeded tracking (observed in PostgreSQL, not model prose)" \
+    poll 120 recorded_from_remote "$SEEDED_ORDER"
 check "Tempo has a trace for service $SVC" poll 90 tempo_has_trace
 check "Prometheus has a metric from $SVC" poll 90 prom_has_metric
 check "Prometheus has the recordConsultation tool-call counter" poll 90 prom_has_counter
 check "Loki has the tool's own log line (observed, not model prose)" poll 90 loki_has_log "tool invoked: orderStatus"
 
-# Negative witness: point the consumer's @McpToolBox("apa-orders") client at a path no server
-# answers at, recreating the app container (which also resets its in-process Micrometer counter to
-# zero), then ask it about an order it has never consulted before. The durable record is the
-# witness, not a point-in-time Prometheus query: OrderStatusRecorder.recordConsultation increments
-# the counter and writes the row in the same method call, so an absent row is already conclusive
-# proof the counter never incremented either, and Prometheus keeps the previous container
-# instance's last-exported (nonzero) sample live in its TSDB well past the restart, which would
-# make an absence check on the metric name alone pass vacuously.
+# Negative witness: clear the recorded row, point the consumer's @McpToolBox("apa-orders") client at
+# a path no server answers at, recreate the app container, then ask about the same seeded order. The
+# model can never reach the remote orderStatus tool, so it has no way to learn the seeded tracking
+# number FL-778821: whether it writes no row at all, or a row from a fabricated or error result, that
+# row cannot carry the seeded tracking number. Asserting on remote-derived content, not row presence,
+# is deliberate, because OrderStatusConsumerAgent also has a LOCAL recordConsultation tool that can
+# write a row even when the remote tool is unreachable; the tracking number is what the local tool
+# alone can never supply.
+clear_consultations
 MCP_APA_ORDERS_URL=http://package-api-as-mcp-tools:8080/wrong-mcp-path restart_app_nowait
 sleep 15
-consume_order O-9002 || true
+consume_order "$SEEDED_ORDER" || true
 sleep 8
-check "negative witness: a broken @McpToolBox wiring leaves the remote tool unreachable (no consultation row for O-9002, so the counter in OrderStatusRecorder.recordConsultation was never incremented either)" \
-    no_consultation O-9002
+check "negative witness: a broken @McpToolBox wiring cannot produce ch13's seeded tracking (no FL-778821 for $SEEDED_ORDER)" \
+    not_recorded_from_remote "$SEEDED_ORDER"
 
 # Restore: the correct URL is the compose default, so recreating without an override reverts it.
 restart_app
-check "restored: the consumer with correct @McpToolBox wiring now records O-9002's consultation" \
-    poll 120 consultation_recorded O-9002
+consume_order "$SEEDED_ORDER" || true
+check "restored: the consumer with correct @McpToolBox wiring again records $SEEDED_ORDER with its seeded tracking" \
+    poll 120 recorded_from_remote "$SEEDED_ORDER"
 
 echo "$PASSED/$TOTAL checks passed"
 [[ "$PASSED" == "$TOTAL" ]]

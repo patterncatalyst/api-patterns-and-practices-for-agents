@@ -49,8 +49,8 @@ services:
       QUARKUS_LANGCHAIN4J_OLLAMA_BASE_URL: http://ollama:11434
       # Demo code: the negative witness. Left at its default, the AiService's @McpToolBox("apa-orders")
       # reaches the real package-api-as-mcp-tools server. Overridden with a wrong path (no server
-      # answers at it), the model can never reach the remote orderStatus tool, so recordConsultation
-      # is never called and no durable row or counter increment follows.
+      # answers at it), the model can never reach the remote orderStatus tool, so it has no way to
+      # learn ch13's seeded tracking number and no recorded row can carry it.
       QUARKUS_LANGCHAIN4J_MCP_APA_ORDERS_URL: ${MCP_APA_ORDERS_URL:-http://package-api-as-mcp-tools:8080/mcp}
     depends_on:
       package-api-as-mcp-tools:

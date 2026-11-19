@@ -1,5 +1,7 @@
 package com.patterncatalyst.agentapi.langchain4jprogrammaticconsumer;
 
+import dev.langchain4j.service.Result;
+import dev.langchain4j.service.tool.ToolExecution;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -25,6 +27,9 @@ public class ConsumerBean {
     @Inject
     FixtureConsumer fixtureConsumer;
 
+    @Inject
+    OrderStatusRecorder recorder;
+
     @ConfigProperty(name = "agent.consumer.model-source", defaultValue = "ollama")
     String modelSource;
 
@@ -32,8 +37,19 @@ public class ConsumerBean {
     public void consume(String orderId) {
         if ("fixture".equals(modelSource)) {
             fixtureConsumer.consume(orderId);
-        } else {
-            agent.consume("Get the status of order " + orderId + " and record that you consulted it.");
+            return;
         }
+        // The model's only job is to call the remote orderStatus tool. What gets recorded is the text
+        // that tool actually returned, read from Result.toolExecutions(), not the model's own prose:
+        // a nondeterministic model cannot change the recorded status or tracking number as long as it
+        // makes the call. If it never calls orderStatus, the captured result is empty and the recorder
+        // writes nothing remote-derived.
+        Result<String> result = agent.consume("Get the status of order " + orderId + ".");
+        String orderStatusResult = result.toolExecutions().stream()
+                .filter(execution -> "orderStatus".equals(execution.request().name()))
+                .map(ToolExecution::result)
+                .reduce((first, last) -> last)
+                .orElse("");
+        recorder.recordConsultation(orderId, orderStatusResult);
     }
 }

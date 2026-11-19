@@ -5,13 +5,16 @@ directly by `quarkus-langchain4j-ollama`, never the Camel `langchain4j-agent` co
 ch13's `package-api-as-mcp-tools` server as a registered remote tool. `@McpToolBox("apa-orders")`
 on the one AiService method registers that server's tools (`orderStatus`, `paymentStatus`,
 `shipmentTracking`) as remote tools over Streamable HTTP, configured by
-`quarkus.langchain4j.mcp.apa-orders.*`. Alongside the remote tool box, the method also carries one
-local tool, `OrderStatusRecorder`, so the model's workflow is: call the remote `orderStatus` tool
-for the order id, then call the local `recordConsultation` tool with what it learned. The local
-tool is the receipt: it writes a durable `consumer.agent_order_status_consultation` record,
-increments a Micrometer counter and logs a line, so the round trip is observable independent of
-the model's own wording, the same reasoning `ShipmentPrepTool` states in
-17-event-triggered-agent-wakeup.
+`quarkus.langchain4j.mcp.apa-orders.*`. The model's only job is to call the remote `orderStatus` tool
+once with the order id. The method returns `dev.langchain4j.service.Result`, not a bare `String`, so
+`ConsumerBean` can read `Result.toolExecutions()`: the exact text that remote tool actually returned,
+captured by the framework. `OrderStatusRecorder` then reads the order status and shipment tracking
+number out of that captured JSON server side and writes a durable
+`consumer.agent_order_status_consultation` row, increments a Micrometer counter and logs a line. The
+record comes from the captured tool result, never from the model's own prose, so a nondeterministic
+model cannot change what is recorded as long as it makes the call, the same reasoning
+`ShipmentPrepTool` states in 17-event-triggered-agent-wakeup. The recorded tracking number is a value
+the model has no way to supply except by reaching the remote tool.
 
 `ConsumeOrderStatusRoute`, a Camel platform-http route (`POST /consume`, the order id as the
 plain-text body, the same convention 00-stack-check's `AssistantRoute` uses), triggers
@@ -45,11 +48,15 @@ Ollama.
 ## The negative witness (live run only)
 
 `MCP_APA_ORDERS_URL` (demo code) points `@McpToolBox("apa-orders")`'s configured URL at a path no
-server answers at. With it broken, the model can never reach the remote `orderStatus` tool, so
-`recordConsultation` is never called and no durable row or counter increment follows for an order
-never consulted before. Restoring the correct URL (the compose default) and asking about the same
-order again records it. This check is the live `verify.sh`'s job (not run by this authoring pass);
-see `_plans/verification-log.md` for the recorded run.
+server answers at. The witness keys on remote-derived content, not on whether a row appears: because
+the AiService also carries a local `recordConsultation` tool, a row can be written even when the
+remote tool is unreachable, so row presence alone would not prove the round trip. ch13 seeds one
+order, `O-9001`, whose shipment tracking number is `FL-778821`, a value the model has no way to
+learn except by reaching the remote `orderStatus` tool. With the URL broken, no recorded row can
+carry that tracking number, whether the model writes nothing or writes a row from a fabricated or
+error result. Restoring the correct URL (the compose default) and asking about the same order again
+records it with `FL-778821`. This check is the live `verify.sh`'s job (not run by this authoring
+pass); see `_plans/verification-log.md` for the recorded run.
 
 ## Run
 
@@ -91,9 +98,9 @@ actually broken and restored.
 |------|---------|
 | `src/main/java/.../ConsumeOrderStatusRoute.java` | the Camel platform-http trigger, `POST /consume` |
 | `src/main/java/.../ConsumerBean.java` | the `@ActivateRequestContext` CDI bridge; `agent.consumer.model-source` picks ollama or fixture |
-| `src/main/java/.../OrderStatusConsumerAgent.java` | the langchain4j `AiService` interface (quarkus-langchain4j-ollama), `@McpToolBox("apa-orders")` plus the local `OrderStatusRecorder` tool |
+| `src/main/java/.../OrderStatusConsumerAgent.java` | the langchain4j `AiService` interface (quarkus-langchain4j-ollama), `@McpToolBox("apa-orders")`, returns `Result<String>` |
 | `src/main/java/.../FixtureConsumer.java` | the MODEL=off decision path: calls the remote MCP tool directly through a hand-built `McpClient` |
-| `src/main/java/.../OrderStatusRecorder.java` | the one local `@Tool`: the durable write, the Micrometer counter, the log line |
+| `src/main/java/.../OrderStatusRecorder.java` | the receipt written from the captured remote result: the durable write, the Micrometer counter, the log line |
 | `src/test/java/.../FixtureOrderStatusMcpServer.java` | test-scope-only in-process MCP server standing in for ch13 under `mvn -B verify` |
 | `src/main/resources/db/migration/` | Flyway migration for `consumer.agent_order_status_consultation` |
 | `compose.yaml` | includes the shared infrastructure, builds ch13's server as its own service, and adds this consumer |
