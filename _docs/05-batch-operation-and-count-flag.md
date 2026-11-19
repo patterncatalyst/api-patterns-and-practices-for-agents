@@ -6,6 +6,15 @@ description: "An id-keyed batch endpoint resolves many identifiers in one call w
 duration: "20 minutes"
 ---
 
+## Learning objectives
+
+- Resolve many known ids in one call, with hits keyed by id and misses named explicitly.
+- Answer "how many" with a bare number instead of the records a caller would otherwise fetch to count.
+- Measure a batch call and a count call against their one-at-a-time and fetch-everything baselines.
+- Recognize a count endpoint returning full records as the negative witness for the shape it exists to avoid.
+
+## Why this matters
+
 An agent that already knows which ten order ids it needs should not have to
 spend ten round trips finding out which of them exist. An agent that only
 needs to know how many orders are PLACED should not have to download every
@@ -108,6 +117,12 @@ Try:
   baseline on your own run.
 - Change the count endpoint to return the full record list and rerun: the
   body becomes an array instead of a number.
+
+## Anti-patterns
+
+- **One call per id.** Resolving several known ids this way pays the full round-trip overhead of a single row for every id, when the caller already knows what it is asking for.
+- **Returning full records to answer "how many."** The pattern's own negative witness: the response stops being a number and becomes a JSON array, the exact shape a count flag exists to avoid.
+- **An unbounded id array on a batch endpoint.** A cap discipline is still needed; a single call that accepts any number of ids trades the pagination problem for an equally unbounded call.
 
 ## When not to use it
 
