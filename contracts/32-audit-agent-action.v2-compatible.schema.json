@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:patterncatalyst:apa:audit-agent-action-v2-compatible",
+  "title": "AuditAgentAction",
+  "description": "A BACKWARD-compatible candidate next version of contracts/21-audit-agent-action.schema.json, used only by examples/32-ci-for-agent-facing-apis to prove the registry accepts a change that adds an optional field. The only change from the baseline is the new optional note property below; the registry's COMPATIBILITY rule, set to BACKWARD, accepts this version.",
+  "type": "object",
+  "required": ["id", "direction", "orderId", "actor", "action", "detail", "occurredAt"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "UUID of this record; the projection's idempotency key, so a redelivery folds exactly once",
+      "example": "b3b3c6b0-6e9b-4f2a-9b0a-7a2a9f6b1c10"
+    },
+    "direction": {
+      "type": "string",
+      "enum": ["INBOUND", "OUTBOUND"],
+      "description": "INBOUND: a tool call the agent consumed. OUTBOUND: a model call its langchain4j code made."
+    },
+    "orderId": {
+      "type": "string",
+      "example": "O-9101"
+    },
+    "actor": {
+      "type": "string",
+      "description": "who or what: a caller identity for INBOUND, or model:<id> for OUTBOUND",
+      "example": "model:qwen3-fixture:recorded-2026-11-19"
+    },
+    "action": {
+      "type": "string",
+      "description": "the tool name (INBOUND) or the decision kind (OUTBOUND)",
+      "example": "shipmentAdvice.decision"
+    },
+    "detail": {
+      "type": "string",
+      "description": "a short, deterministic summary of the call or decision, never the model's own prose (OTel GenAI content capture stays off)",
+      "example": "carrier=AIRCO"
+    },
+    "tokensIn": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "set only for OUTBOUND"
+    },
+    "tokensOut": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "set only for OUTBOUND"
+    },
+    "costUsd": {
+      "type": ["string", "null"],
+      "description": "derived from tokensIn/tokensOut alone, never from content; decimal string, set only for OUTBOUND",
+      "example": "0.000027"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "note": {
+      "type": ["string", "null"],
+      "description": "an optional free-text annotation, absent from every record written before this version; a reader built against the baseline schema never needed it, so adding it changes nothing for that reader"
+    }
+  }
+}

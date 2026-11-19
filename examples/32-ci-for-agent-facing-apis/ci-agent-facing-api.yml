@@ -1,0 +1,31 @@
+# Sample CI workflow, displayed by the chapter. Not a live pipeline: GitHub-hosted runners have no
+# Docker stack to bring up, so this file never runs here. It runs the identical gate logic verify.sh
+# runs locally, against a stack this job itself brings up on its own runner, publishing every port the
+# job needs directly (no tunnel, no forward, no proxy to a stack running elsewhere).
+name: ci-for-agent-facing-apis
+
+on:
+  pull_request:
+    paths:
+      - "contracts/**"
+      - "examples/07-strict-self-describing-contract/**"
+      - "examples/13-package-api-as-mcp-tools/**"
+
+jobs:
+  contract-drift-and-schema-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Run the two-gate harness
+        working-directory: examples/32-ci-for-agent-facing-apis
+        run: ./verify.sh
+
+      - name: Fail the pull request on any gate miss
+        if: failure()
+        run: |
+          echo "Either the served contract/manifest drifted from what is committed, or a schema" \
+               "version failed its BACKWARD compatibility check. Fix the drift or the schema change" \
+               "before merging; do not relax a gate to get the job green."
+          exit 1
