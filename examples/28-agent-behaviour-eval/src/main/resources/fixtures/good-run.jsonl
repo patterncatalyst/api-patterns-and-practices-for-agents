@@ -1,0 +1,4 @@
+{"type":"run","runId":"good-run","orderId":"O-28001","customerId":"CUST-28001"}
+{"type":"tool_call","name":"cancelAndRefund","args":{"orderId":"O-28001","reason":"the item arrived damaged"},"argError":false}
+{"type":"usage","inputTokens":684,"outputTokens":61,"totalTokens":745}
+{"type":"outcome","finalOrderStatus":"CANCELLED","refundCompleted":true}

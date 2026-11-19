@@ -20,8 +20,20 @@ public class OrderService {
     @Inject
     DataSource dataSource;
 
+    // orders.amount is numeric(12, 2): at most ten integer digits before the two decimal places.
+    // A larger value would overflow the column, so it is rejected here as an invalid request
+    // rather than left to surface as a database error.
+    private static final java.math.BigDecimal MAX_AMOUNT = new java.math.BigDecimal("9999999999.99");
+
     @Transactional
     public PlaceOrderResult placeOrder(OrderCreateRequest request) {
+        // Reject a missing required field as an invalid request here, so it becomes a documented 400
+        // instead of a null reaching the domain record's own null check and surfacing as a 500.
+        requireText(request.customerId(), "customerId");
+        requireText(request.itemSku(), "itemSku");
+        if (request.amount() != null && request.amount().compareTo(MAX_AMOUNT) > 0) {
+            throw new IllegalArgumentException("amount must not exceed " + MAX_AMOUNT);
+        }
         try (Connection c = dataSource.getConnection()) {
             String orderId = "O-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             // The domain Order record's own compact constructor validates the fields (non-blank
@@ -53,6 +65,12 @@ public class OrderService {
             }
         } catch (SQLException e) {
             throw new IllegalStateException("get-order failed for " + orderId, e);
+        }
+    }
+
+    private static void requireText(String value, String field) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(field + " must not be blank");
         }
     }
 

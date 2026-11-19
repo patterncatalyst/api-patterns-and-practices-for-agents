@@ -1,0 +1,6 @@
+{"type":"run","runId":"regressed-run","orderId":"O-28002","customerId":"CUST-28002"}
+{"type":"tool_call","name":"cancelAndRefund","args":{"orderId":"","reason":"the item arrived damaged"},"argError":true}
+{"type":"tool_call","name":"cancelAndRefund","args":{"orderId":"O-28002","reason":"the item arrived damaged"},"argError":false}
+{"type":"tool_call","name":"cancelAndRefund","args":{"orderId":"O-28002","reason":"the item arrived damaged"},"argError":false}
+{"type":"usage","inputTokens":1310,"outputTokens":198,"totalTokens":1508}
+{"type":"outcome","finalOrderStatus":"PAID","refundCompleted":false}

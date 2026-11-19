@@ -1,0 +1,11 @@
+{
+  "evalId": "28-behaviour-eval",
+  "version": 1,
+  "description": "Deterministic behaviour eval for the cancel-and-refund task: scores a recorded agent transcript to PASS or FAIL from the captured tool-call sequence, the call and token budgets, and the durable outcome, never from the model's own prose. Assertions are evaluated in order; the first one a transcript fails is the recorded violatedAssertion.",
+  "expectedToolSequence": ["cancelAndRefund"],
+  "maxToolCalls": 1,
+  "maxArgErrors": 0,
+  "maxTotalTokens": 900,
+  "requireRefundCompleted": true,
+  "requireFinalOrderStatus": "CANCELLED"
+}

@@ -1,0 +1,45 @@
+name: apa-28
+
+include:
+  - path: ../_infra/compose.yaml
+  - path: ../_infra/compose.lgtm.yaml
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: 28-agent-behaviour-eval/Containerfile
+    container_name: apa-agent-behaviour-eval
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+      QUARKUS_LANGCHAIN4J_OLLAMA_BASE_URL: http://ollama:11434
+      # Demo code: the MODEL=off reconciliation point. Left at its default, GET /eval/run/good
+      # replays the committed good-run.jsonl and never touches Ollama. verify.sh's LIVE=1 lane
+      # sets this to "ollama" instead, so GET /eval/run/good drives the real model through
+      # LiveRunner and scores whatever it actually did.
+      AGENT_EVAL_MODEL_SOURCE: ${AGENT_EVAL_MODEL_SOURCE:-fixture}
+    volumes:
+      # The committed eval spec this chapter is about, read-only.
+      - ../../contracts:/deployments/contracts:ro,Z
+    depends_on:
+      postgres:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+networks:
+  apa:
+    name: apa
