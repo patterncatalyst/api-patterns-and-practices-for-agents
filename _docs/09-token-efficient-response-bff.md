@@ -6,6 +6,15 @@ description: "A backend-for-frontend layer shapes a response for the token budge
 duration: "25 minutes"
 ---
 
+## Learning objectives
+
+- Build a purpose-built projection read by its own narrow query, never the full entity reshaped after loading.
+- Return human-readable ids and drop internal fields a task never uses.
+- Narrow the response further with GraphQL field selection on top of an already-lean projection.
+- Measure the byte contrast between a full payload, a projection and a field-selected query to confirm the saving is real.
+
+## Why this matters
+
 Every field in a response an agent reads has to sit in the same bounded
 context window as the task's instructions, the tool definitions, and
 whatever the agent has already seen. A payload built for a human dashboard
@@ -107,6 +116,12 @@ Try:
   summary response grows back to the full payload's byte size.
 - Change the GraphQL `orderSummary` return type to a hand-rolled string and
   rerun: the two-field selection query stops returning any data at all.
+
+## Anti-patterns
+
+- **Forwarding the full entity under a friendlier name.** A "summary" endpoint that just forwards the full payload pays the full token cost without removing any of the actual weight, the pattern's own negative witness.
+- **Trimming fields in Java after loading the full entity.** Reshaping the full entity's result in application code still runs the heavy query underneath; the saving only exists when the projection has its own narrow query.
+- **Hand-rolling the GraphQL return as a raw string.** Flattening a typed projection into a string response removes field selection entirely, so a caller can no longer narrow a query to the two fields it actually wants.
 
 ## When not to use it
 
