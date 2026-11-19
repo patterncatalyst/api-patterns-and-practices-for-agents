@@ -1,0 +1,123 @@
+asyncapi: 3.0.0
+info:
+  title: Multi-agent choreography
+  version: 1.0.0
+  description: >
+    The two channels chapter 18's three agents coordinate through: no orchestrator calls any of
+    them, each one only sends or receives on these channels. The order agent sends
+    orderPlaced; the shipping agent receives it, then sends shipmentScheduled; the notification
+    agent receives shipmentScheduled and emits nothing further (the domain model's
+    notification-service "reacts to every event, emits none"), so its terminal effect is a
+    private database row, not a published event, and is not modelled here.
+channels:
+  ordersPlaced:
+    address: apa.orders.placed
+    messages:
+      orderPlaced:
+        $ref: '#/components/messages/OrderPlaced'
+  shippingScheduled:
+    address: apa.shipping.scheduled
+    messages:
+      shipmentScheduled:
+        $ref: '#/components/messages/ShipmentScheduled'
+operations:
+  placeOrder:
+    action: send
+    channel:
+      $ref: '#/channels/ordersPlaced'
+    summary: >
+      order-service's placeOrder tool publishes OrderPlaced once it has recorded the order,
+      starting the choreography.
+    messages:
+      - $ref: '#/channels/ordersPlaced/messages/orderPlaced'
+  wakeShippingAgent:
+    action: receive
+    channel:
+      $ref: '#/channels/ordersPlaced'
+    summary: >
+      shipping-service's Kafka consumer wakes its langchain4j agent on every order-placed event,
+      rather than polling the topic or the orders.orders table for the same fact.
+    messages:
+      - $ref: '#/channels/ordersPlaced/messages/orderPlaced'
+  scheduleShipment:
+    action: send
+    channel:
+      $ref: '#/channels/shippingScheduled'
+    summary: >
+      shipping-service's scheduleShipment tool publishes ShipmentScheduled once it has recorded
+      the shipment, unless its demo drop guard is enabled (this chapter's negative witness), in
+      which case a Camel filter silently drops the event here and nothing downstream completes.
+    messages:
+      - $ref: '#/channels/shippingScheduled/messages/shipmentScheduled'
+  wakeNotificationAgent:
+    action: receive
+    channel:
+      $ref: '#/channels/shippingScheduled'
+    summary: >
+      notification-service's Kafka consumer wakes its langchain4j agent on every
+      shipment-scheduled event. Its tool call is the choreography's terminal effect: a private
+      database row, never a further published event.
+    messages:
+      - $ref: '#/channels/shippingScheduled/messages/shipmentScheduled'
+components:
+  messages:
+    OrderPlaced:
+      name: OrderPlaced
+      title: Order placed
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/Order'
+    ShipmentScheduled:
+      name: ShipmentScheduled
+      title: Shipment scheduled
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ShipmentScheduledEvent'
+  schemas:
+    Order:
+      type: object
+      description: >
+        The domain-model Order record (com.patterncatalyst.agentapi.Order), published unchanged
+        as the event payload, the same way 00-stack-check publishes Order unchanged on
+        apa.orders.placed.
+      required: [id, customerId, itemSku, quantity, amount]
+      properties:
+        id:
+          type: string
+          example: O-9001
+        customerId:
+          type: string
+          example: CUST-9001
+        itemSku:
+          type: string
+          example: SKU-1
+        quantity:
+          type: integer
+          example: 1
+        amount:
+          type: string
+          description: decimal amount, 2 places, HALF_UP
+          example: "149.99"
+    ShipmentScheduledEvent:
+      type: object
+      description: >
+        A per-example event payload record (com.patterncatalyst.agentapi.
+        multiagentchoreography.events.ShipmentScheduledEvent), not a domain-model entity:
+        CLAUDE.md states event payload records live per example. It carries customerId forward
+        from OrderPlaced so the notification agent never needs to call back into the order
+        agent's schema to learn who to notify.
+      required: [orderId, customerId, carrier, trackingNumber]
+      properties:
+        orderId:
+          type: string
+          example: O-9001
+        customerId:
+          type: string
+          example: CUST-9001
+        carrier:
+          type: string
+          enum: [FASTLINE, AIRCO]
+          example: AIRCO
+        trackingNumber:
+          type: string
+          example: TRK-O-9001
