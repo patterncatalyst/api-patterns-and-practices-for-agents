@@ -6,6 +6,15 @@ description: "Designing an API for an agent or a large language model is a syste
 duration: "25 minutes"
 ---
 
+## Learning objectives
+
+- Name the five pressures that make an agent-facing contract a different engineering job than a human-facing one.
+- Read a tool's name, description and argument schema as the agent's only per-call instruction set.
+- Measure tool-call count, argument errors and token cost across a granular contract and an intent-shaped one for the same task.
+- Recognize a bad, CRUD-shaped tool contract as the negative witness for the five pressures.
+
+## Why this matters
+
 An agent does not read documentation once and remember it. It reads a tool's
 name, its description and its argument schema at the moment it decides
 whether to call that tool, every single time, inside a window that also holds
@@ -149,6 +158,12 @@ Try:
 - Edit the bad contract's recorded transcript so it reports one tool call
   instead of five, then rerun: the contrast, and the rule built on it, stop
   holding.
+
+## Anti-patterns
+
+- **Granular, CRUD-shaped tools an agent must sequence itself.** `getOrder`, `updateOrderStatus` and `createRefund` as three separate calls, instead of one tool named for the operation.
+- **Opaque errors with no remedy text.** A bare status code tells an agent something failed and nothing about what to try next, so it repeats the call or guesses.
+- **Unguarded retries on a write.** An agent that retries after a timeout, against an endpoint with no idempotency guard, risks double-submitting the same operation.
 
 ## References
 
