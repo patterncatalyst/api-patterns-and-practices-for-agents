@@ -1,6 +1,56 @@
 [
   {
-    "_placeholder": true,
-    "_note": "Best-effort draft, not yet captured from a live run. quarkus-mcp-server-http's exact JSON Schema generation (property order and $schema framing) for takePayment/refundPayment's inputSchema can only be confirmed by running verify.sh against the live stack. The orchestrator's live two-image verification run must replace this file's contents with the actual served `tools/list` result (`jq '.result.tools' <response>`) before the 'committed contract matches served' check in verify.sh will pass."
+    "name": "refundPayment",
+    "description": "Refund a completed payment for an order. amount is a decimal string matching the amount originally taken, for example \"49.99\". Returns the order id, the decimal amount and the resulting payment status.",
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "The order id, for example O-9001."
+        },
+        "amount": {
+          "type": "string",
+          "description": "The amount to refund, as a decimal string, for example 49.99."
+        }
+      },
+      "required": [
+        "orderId",
+        "amount"
+      ]
+    }
+  },
+  {
+    "name": "takePayment",
+    "description": "Take a payment for an order. amount is a decimal string, for example \"49.99\". Returns the order id, the decimal amount taken and the resulting payment status.",
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "The order id, for example O-9001."
+        },
+        "amount": {
+          "type": "string",
+          "description": "The amount to take, as a decimal string, for example 49.99."
+        }
+      },
+      "required": [
+        "orderId",
+        "amount"
+      ]
+    }
   }
 ]

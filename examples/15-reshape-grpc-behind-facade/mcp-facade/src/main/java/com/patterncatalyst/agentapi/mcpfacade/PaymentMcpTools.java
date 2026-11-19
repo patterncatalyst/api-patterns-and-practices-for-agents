@@ -9,6 +9,7 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.quarkiverse.mcp.server.Tool;
 import io.quarkiverse.mcp.server.ToolArg;
+import io.quarkiverse.mcp.server.WrapBusinessError;
 import io.quarkus.grpc.GrpcClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -36,6 +37,7 @@ public class PaymentMcpTools {
             + "payment status.",
             annotations = @Tool.Annotations(readOnlyHint = false, destructiveHint = false,
                     idempotentHint = false, openWorldHint = false))
+    @WrapBusinessError(PaymentFacadeException.class)
     public String takePayment(@ToolArg(description = "The order id, for example O-9001.") String orderId,
             @ToolArg(description = "The amount to take, as a decimal string, for example 49.99.") String amount) {
         TakePaymentRequest request = TakePaymentRequest.newBuilder()
@@ -50,6 +52,7 @@ public class PaymentMcpTools {
             + "id, the decimal amount and the resulting payment status.",
             annotations = @Tool.Annotations(readOnlyHint = false, destructiveHint = true,
                     idempotentHint = false, openWorldHint = false))
+    @WrapBusinessError(PaymentFacadeException.class)
     public String refundPayment(@ToolArg(description = "The order id, for example O-9001.") String orderId,
             @ToolArg(description = "The amount to refund, as a decimal string, for example 49.99.") String amount) {
         RefundRequest request = RefundRequest.newBuilder()

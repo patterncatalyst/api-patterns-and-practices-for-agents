@@ -16,6 +16,7 @@ import com.patterncatalyst.agentapi.payment.v1.RefundRequest;
 import com.patterncatalyst.agentapi.payment.v1.TakePaymentRequest;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import io.quarkiverse.mcp.server.ToolCallException;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -70,11 +71,12 @@ class PaymentMcpToolsTest {
                 Uni.createFrom().failure(new StatusRuntimeException(
                         Status.NOT_FOUND.withDescription("no payment for order O-0000"))));
 
-        PaymentFacadeException failure = assertThrows(PaymentFacadeException.class,
+        ToolCallException failure = assertThrows(ToolCallException.class,
                 () -> tools.refundPayment("O-0000", "10.00"));
 
-        assertTrue(failure.getMessage().contains("No payment found"), "the message must be instructive, not a bare code");
-        assertTrue(failure.getMessage().contains("O-0000"));
+        String text = messageChain(failure);
+        assertTrue(text.contains("No payment found"), "the surfaced tool error must be instructive, not a bare code");
+        assertTrue(text.contains("O-0000"));
     }
 
     @Test
@@ -83,10 +85,22 @@ class PaymentMcpToolsTest {
                 Uni.createFrom().failure(new StatusRuntimeException(
                         Status.FAILED_PRECONDITION.withDescription("payment for order O-9002 is REFUNDED"))));
 
-        PaymentFacadeException failure = assertThrows(PaymentFacadeException.class,
+        ToolCallException failure = assertThrows(ToolCallException.class,
                 () -> tools.refundPayment("O-9002", "10.00"));
 
-        assertTrue(failure.getMessage().contains("cannot be refunded"));
+        assertTrue(messageChain(failure).contains("cannot be refunded"));
+    }
+
+    /** The instructive text may sit on the thrown {@link ToolCallException} or on the wrapped
+     * {@link PaymentFacadeException} cause; walk the chain so the assertion holds either way. */
+    private static String messageChain(Throwable t) {
+        StringBuilder sb = new StringBuilder();
+        for (Throwable c = t; c != null; c = c.getCause()) {
+            if (c.getMessage() != null) {
+                sb.append(c.getMessage()).append(' ');
+            }
+        }
+        return sb.toString();
     }
 
     @Test
