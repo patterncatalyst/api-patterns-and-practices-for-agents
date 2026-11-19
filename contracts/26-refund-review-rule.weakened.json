@@ -1,0 +1,19 @@
+{
+  "ruleId": "26-refund-review-rule",
+  "version": 1,
+  "description": "Weakened variant of 26-refund-review-rule.json, used only by verify.sh's negative witness: the amount-ceiling clause is removed, so a refund that exceeds the order's paid amount wrongly passes. Never used as the default rule.",
+  "clauses": [
+    {
+      "id": "order-not-refundable",
+      "type": "orderStatusIn",
+      "allowed": ["PAID", "SHIPPED"],
+      "description": "The order must be in a refundable state."
+    },
+    {
+      "id": "reason-not-allowed",
+      "type": "reasonIn",
+      "allowed": ["DAMAGED_IN_TRANSIT", "WRONG_ITEM_SHIPPED", "NOT_AS_DESCRIBED", "CUSTOMER_CHANGED_MIND"],
+      "description": "The stated reason must be one of the allowed set."
+    }
+  ]
+}

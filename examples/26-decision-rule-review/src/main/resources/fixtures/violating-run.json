@@ -1,0 +1,8 @@
+{
+  "orderId": "O-26002",
+  "customerId": "CUST-26002",
+  "orderStatus": "PAID",
+  "orderPaidAmount": 200.00,
+  "refundAmount": 500.00,
+  "reason": "DAMAGED_IN_TRANSIT"
+}

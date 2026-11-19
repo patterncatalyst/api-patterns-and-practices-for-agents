@@ -1,0 +1,24 @@
+{
+  "ruleId": "26-refund-review-rule",
+  "version": 1,
+  "description": "Deterministic refund review rule: an agent proposes a refund (amount, reason) for an order, this committed rule decides APPROVE or REJECT from the proposal plus the order's facts. Clauses are evaluated in order; the first one a proposal fails is the recorded failedClause. A hand-rolled JSON-rule shape, not Drools or DMN (see Appendix F for the Drools/DMN sibling of this same decision).",
+  "clauses": [
+    {
+      "id": "amount-exceeds-paid",
+      "type": "amountNotGreaterThanPaid",
+      "description": "The refund amount must not exceed the order's paid amount."
+    },
+    {
+      "id": "order-not-refundable",
+      "type": "orderStatusIn",
+      "allowed": ["PAID", "SHIPPED"],
+      "description": "The order must be in a refundable state."
+    },
+    {
+      "id": "reason-not-allowed",
+      "type": "reasonIn",
+      "allowed": ["DAMAGED_IN_TRANSIT", "WRONG_ITEM_SHIPPED", "NOT_AS_DESCRIBED", "CUSTOMER_CHANGED_MIND"],
+      "description": "The stated reason must be one of the allowed set."
+    }
+  ]
+}
