@@ -1,0 +1,88 @@
+asyncapi: 3.0.0
+info:
+  title: Human-in-the-loop gate
+  version: 1.0.0
+  description: >
+    The two channels of chapter 19's cancel-and-refund gate. A proposed cancel-and-refund is
+    held, never executed, the instant it is proposed: apa.orders.pending-decisions carries the
+    held proposal, keyed by a correlation id; apa.orders.decisions carries the decision that
+    resumes it, keyed by the same correlation id. The cancel-and-refund side effect itself is a
+    private result of consuming a decision, not a published event, so it is not modelled here.
+    The decision schema below is registered in Apicurio (groups/apa/artifacts/apa.orders.decisions)
+    under the BACKWARD compatibility rule; see contracts/19-cancel-gate-decision.schema.json for
+    the committed JSON Schema document.
+channels:
+  pendingDecisions:
+    address: apa.orders.pending-decisions
+    messages:
+      pendingDecision:
+        $ref: '#/components/messages/PendingDecision'
+  decisions:
+    address: apa.orders.decisions
+    messages:
+      decision:
+        $ref: '#/components/messages/Decision'
+operations:
+  holdForDecision:
+    action: send
+    channel:
+      $ref: '#/channels/pendingDecisions'
+    summary: >
+      The cancel-gate agent proposes a cancel-and-refund and holds it at the gate instead of
+      executing it, publishing the proposal once a human (or automated) reviewer can decide.
+    messages:
+      - $ref: '#/channels/pendingDecisions/messages/pendingDecision'
+  resumeFromDecision:
+    action: receive
+    channel:
+      $ref: '#/channels/decisions'
+    summary: >
+      The gate's Kafka consumer resumes exactly one held proposal per correlation id: APPROVE
+      performs the cancel-and-refund side effect exactly once, even when redelivered; REJECT
+      terminates with REJECTED_BY_USER and performs no side effect, ever.
+    messages:
+      - $ref: '#/channels/decisions/messages/decision'
+components:
+  messages:
+    PendingDecision:
+      name: PendingDecision
+      title: Pending decision
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PendingDecisionEvent'
+    Decision:
+      name: Decision
+      title: Decision
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CancelGateDecision'
+  schemas:
+    PendingDecisionEvent:
+      type: object
+      description: The held proposal, published once per proposeCancelAndRefund tool call.
+      required: [correlationId, orderId, proposedAction, reasonCode, amount, reason, proposedAt]
+      properties:
+        correlationId:
+          type: string
+          example: b3b3c6b0-6e9b-4f2a-9b0a-7a2a9f6b1c10
+        orderId:
+          type: string
+          example: O-19001
+        proposedAction:
+          type: string
+          enum: [CANCEL_AND_REFUND]
+        reasonCode:
+          type: string
+          enum: [CUSTOMER_REQUEST, DUPLICATE_ORDER, FRAUD_SUSPECTED]
+        amount:
+          type: string
+          description: decimal amount, 2 places, HALF_UP; the payment amount that would be refunded
+          example: "149.00"
+        reason:
+          type: string
+          example: "customer requested cancellation"
+        proposedAt:
+          type: string
+          format: date-time
+    CancelGateDecision:
+      $ref: '19-cancel-gate-decision.schema.json'

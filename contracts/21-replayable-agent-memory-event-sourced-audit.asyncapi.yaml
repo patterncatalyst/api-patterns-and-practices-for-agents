@@ -1,0 +1,50 @@
+asyncapi: 3.0.0
+info:
+  title: Replayable agent memory, event-sourced audit
+  version: 1.0.0
+  description: >
+    The append-only audit channel for chapter 21. Every agent action in shipping-service's
+    audit trail lands here, both directions: an inbound tool call the agent consumed, and an
+    outbound model call its langchain4j code made. A projector folds this channel into a
+    Postgres read model; a replay endpoint rebuilds the same projection from scratch by reading
+    this channel again from the beginning, and the two must always agree, since the fold is a
+    pure function of the log. The schema below is registered in Apicurio
+    (groups/apa/artifacts/apa.audit.agent-actions) under the BACKWARD compatibility rule; see
+    contracts/21-audit-agent-action.schema.json for the committed JSON Schema document.
+channels:
+  agentActions:
+    address: apa.audit.agent-actions
+    messages:
+      auditAgentAction:
+        $ref: '#/components/messages/AuditAgentAction'
+operations:
+  appendAuditRecord:
+    action: send
+    channel:
+      $ref: '#/channels/agentActions'
+    summary: >
+      shipping-service appends one record per tool call it consumes and per model call its
+      langchain4j code makes, through the one direct:audit-append route.
+    messages:
+      - $ref: '#/channels/agentActions/messages/auditAgentAction'
+  foldAuditProjection:
+    action: receive
+    channel:
+      $ref: '#/channels/agentActions'
+    summary: >
+      The live projector folds every committed record into shipping.audit_log_projection; a
+      disposable-group replay consumer folds the same channel, from the beginning, into
+      shipping.audit_replay to rebuild and verify the projection independently.
+    messages:
+      - $ref: '#/channels/agentActions/messages/auditAgentAction'
+components:
+  messages:
+    AuditAgentAction:
+      name: AuditAgentAction
+      title: Audit agent action
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/AuditAgentAction'
+  schemas:
+    AuditAgentAction:
+      $ref: '21-audit-agent-action.schema.json'
