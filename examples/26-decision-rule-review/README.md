@@ -18,7 +18,7 @@ on its `type`, the committed rule's real three being `amountNotGreaterThanPaid` 
 not exceed the order's paid amount), `orderStatusIn` (the order must be `PAID` or `SHIPPED`, never
 already `CANCELLED` or `DELIVERED`) and `reasonIn` (the stated reason must be one of an allowed
 set). The first clause a proposal fails is the recorded verdict's `failedClause`; a proposal that
-fails none is `APPROVE`. This is a hand-rolled JSON-rule evaluator, deliberately not Drools or DMN:
+fails none is `APPROVE`. This is a hand-rolled JSON-rule evaluator, not Drools or DMN:
 Appendix F builds this exact same refund-review decision again as a Drools/DMN ruleset, the
 rule-engine sibling of this chapter's plain Java switch. `ReviewRecorder` then writes a durable
 `review.reviews` row (the order id, the full proposal as JSON, the verdict and, on `REJECT`, the
