@@ -6,6 +6,15 @@ description: "A machine-readable llms.txt and a shared portal serve a browsing h
 duration: "20 minutes"
 ---
 
+## Learning objectives
+
+- Own every operation's id, method, path and summary in one CDI bean instead of two independent write-ups.
+- Render both `/llms.txt`, in the llmstxt.org shape, and `/portal` from that single shared bean.
+- Enforce operation-id set equality between the two surfaces as the pattern's one observable guarantee.
+- Recognize a hardcoded line bypassing the shared bean as the negative witness that breaks set equality.
+
+## Why this matters
+
 A human lands on an API's documentation portal; a model reads `/llms.txt`
 instead, a plain-text summary written for a reader that parses text rather
 than clicking links. Writing each surface from its own hand-maintained copy
@@ -109,6 +118,12 @@ Try:
   portal never learns about the extra operation.
 - Add a real operation to `ApiMetadata.operations()` and rerun: both
   surfaces pick it up without either resource changing.
+
+## Anti-patterns
+
+- **Two independently maintained write-ups of one API.** A human portal and a machine-readable summary, each its own source of truth, drift apart the moment an operation is added to one and forgotten in the other.
+- **Bypassing the shared bean for a hardcoded line.** Appending an operation directly inside one resource instead of `ApiMetadata` breaks set equality immediately, the pattern's own negative witness.
+- **One unfiltered rendering for surfaces that should differ.** A portal meant to show more than a model should read needs a filtered view over the shared source, not the same rendering pushed to both.
 
 ## When not to use it
 
