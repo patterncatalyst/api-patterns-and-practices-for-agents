@@ -46,11 +46,11 @@ Schemathesis reads the committed OpenAPI document, generates requests from it, a
 
 The second check fetches the service's own served OpenAPI document and normalizes it, along with the committed contract, to sorted-key JSON so that key order and JSON-versus-YAML formatting never produce a false mismatch, then diffs the two. A service can conform to every status code and schema Schemathesis checks and still have published a document that no longer matches the one a consumer generated a client from; this check catches that drift directly.
 
-The third and fourth checks do the same two things for the MCP side: the harness drives the packaged tool server's MCP lifecycle over Streamable HTTP, lists its tools, and asserts the served tool set is identical to the committed manifest.
+The third and fourth checks cover the MCP side: the harness drives the packaged tool server's MCP lifecycle over Streamable HTTP, lists its tools, and asserts the served tool set is identical to the committed manifest.
 
 None of these four checks mean anything unless they can fail. The harness proves it with a biting negative witness: a committed, drifted copy of the OpenAPI contract and a committed, drifted copy of the MCP manifest. The drifted OpenAPI document tightens a response schema with a field the service never actually returns and removes two of its documented error responses; the drifted manifest renames a tool and drops a required parameter from another. The harness runs the exact same Schemathesis conformance and the exact same tools-list diff against these drifted fixtures and asserts both runs fail. No source in either reused service changes to produce this failure; only the committed fixture the check is pointed at changes.
 
-Conformance checking a running service, not just its startup, is what caught two real gaps during this harness's own build: the service returned an out-of-range value its contract never described, and a malformed request produced a body the contract never described either, each one escaping as an undocumented 500 that a health probe would have called healthy the entire time.
+Conformance checking a running service, not just its startup, is what caught three real gaps during this harness's own build: an out-of-range value, a malformed request body, and a missing required field each produced a response the contract never described, every one escaping as an undocumented 500 that a health probe would have called healthy the entire time.
 
 > **🤖 Explore with your agent**
 > **Intent (stack-neutral):** the API must prove, with a running check and not a human reading two documents side by side, that a service's actual behavior still matches the contract and tool manifest it publishes.
