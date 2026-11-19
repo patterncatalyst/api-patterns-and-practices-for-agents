@@ -6,6 +6,15 @@ description: "A precise OpenAPI 3.1 document, generated from the code and kept i
 duration: "25 minutes"
 ---
 
+## Learning objectives
+
+- Generate the OpenAPI 3.1 document from annotated code at build time instead of maintaining a second copy by hand.
+- Mark every required field, every status field's enumerated values, and a stable `operationId` per operation.
+- Commit the served document as the record of what was generated and diff a later run against it to catch drift.
+- Recognize a schema that degrades to a bare `type: string` as the negative witness a careless or missing annotation leaves behind.
+
+## Why this matters
+
 An agent never reads the Java that implements an endpoint. It reads whatever
 document describes the endpoint, a generated OpenAPI file or a tool
 definition built from one, and calls the operation based on what that
@@ -122,6 +131,12 @@ Try:
   longer names either operation.
 - Remove `@Schema(enumeration = ...)` from `OrderResponse.status` and rerun:
   the generated schema shows only `type: string`, no enum.
+
+## Anti-patterns
+
+- **A hand-maintained contract.** A document stating what its author remembers about the API, not what the running service actually accepts and returns, drifts the moment a field is renamed or a status value is added.
+- **An enum degraded to a bare string.** Omitting `required` or `enumeration` annotations leaves a schema showing only `type: string`, the pattern's own negative witness of what a careless annotation produces.
+- **Treating "generated" as a synonym for "strict."** A document generated from careless annotations is still generated; generation removes drift, not the discipline of marking every field required and every status value enumerated.
 
 ## When not to use it
 
