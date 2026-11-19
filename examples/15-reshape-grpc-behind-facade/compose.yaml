@@ -1,0 +1,64 @@
+name: apa-15
+
+include:
+  - path: ../_infra/compose.yaml
+  - path: ../_infra/compose.lgtm.yaml
+
+services:
+  # The separate payment-service image: gRPC only, no host-published port. The mcp-facade is the
+  # only caller, reaching it by compose service name on the quarkus-grpc default separate-server
+  # port (9000).
+  payment-service:
+    build:
+      context: ../..
+      dockerfile: examples/15-reshape-grpc-behind-facade/payment-service/Containerfile
+    container_name: apa-15-payment-service
+    environment:
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+    depends_on:
+      postgres:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+  # The MCP facade: the only agent-facing surface in this example. Reshapes JSON through a real
+  # gRPC channel to payment-service; published on 127.0.0.1:8080 like every other example.
+  mcp-facade:
+    build:
+      context: ../..
+      dockerfile: examples/15-reshape-grpc-behind-facade/mcp-facade/Containerfile
+    container_name: apa-15-mcp-facade
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      PAYMENT_SERVICE_GRPC_HOST: payment-service
+      PAYMENT_SERVICE_GRPC_PORT: "9000"
+    depends_on:
+      payment-service:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+networks:
+  apa:
+    name: apa

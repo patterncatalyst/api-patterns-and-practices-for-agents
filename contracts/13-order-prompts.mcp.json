@@ -1,0 +1,13 @@
+[
+  {
+    "name": "summarizeOrderStatus",
+    "description": "Summarize an order's composed status (order, payment, shipment) in plain language for a customer.",
+    "arguments": [
+      {
+        "name": "orderId",
+        "description": "The order id, for example O-9001.",
+        "required": true
+      }
+    ]
+  }
+]

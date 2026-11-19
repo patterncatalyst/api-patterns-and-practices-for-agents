@@ -1,0 +1,56 @@
+[
+  {
+    "name": "refundPayment",
+    "description": "Refund a completed payment for an order. amount is a decimal string matching the amount originally taken, for example \"49.99\". Returns the order id, the decimal amount and the resulting payment status.",
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "The order id, for example O-9001."
+        },
+        "amount": {
+          "type": "string",
+          "description": "The amount to refund, as a decimal string, for example 49.99."
+        }
+      },
+      "required": [
+        "orderId",
+        "amount"
+      ]
+    }
+  },
+  {
+    "name": "takePayment",
+    "description": "Take a payment for an order. amount is a decimal string, for example \"49.99\". Returns the order id, the decimal amount taken and the resulting payment status.",
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "The order id, for example O-9001."
+        },
+        "amount": {
+          "type": "string",
+          "description": "The amount to take, as a decimal string, for example 49.99."
+        }
+      },
+      "required": [
+        "orderId",
+        "amount"
+      ]
+    }
+  }
+]

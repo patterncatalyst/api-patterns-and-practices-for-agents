@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package patterncatalyst.agentapi.payment.v1;
+
+option java_package = "com.patterncatalyst.agentapi.payment.v1";
+option java_multiple_files = true;
+
+// Mirrors com.patterncatalyst.agentapi.PaymentStatus (examples/domain-model). Proto3 enums must
+// start at 0, so PAYMENT_STATUS_UNSPECIFIED is the required zero value; it is never set on a real
+// payment.
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  PENDING = 1;
+  COMPLETED = 2;
+  FAILED = 3;
+  REFUNDED = 4;
+}
+
+// A payment taken for one order, mirroring com.patterncatalyst.agentapi.Payment. amount_cents is
+// int64: proto3 has no decimal type, and cents avoid the floating-point rounding a double would
+// introduce on the wire.
+message Payment {
+  string id = 1;
+  string order_id = 2;
+  int64 amount_cents = 3;
+  PaymentStatus status = 4;
+}
+
+message TakePaymentRequest {
+  string order_id = 1;
+  int64 amount_cents = 2;
+}
+
+message RefundRequest {
+  string order_id = 1;
+  int64 amount_cents = 2;
+}
+
+message PaymentResponse {
+  Payment payment = 1;
+}
+
+// The one gRPC surface this example puts behind the MCP facade: taking and refunding a payment
+// for an order. Both rpcs are unary; the facade reshapes the JSON decimal amount an agent sends
+// into amount_cents on the way in, and amount_cents plus PaymentStatus back into decimal JSON on
+// the way out.
+service PaymentService {
+  rpc TakePayment (TakePaymentRequest) returns (PaymentResponse);
+  rpc RefundPayment (RefundRequest) returns (PaymentResponse);
+}
