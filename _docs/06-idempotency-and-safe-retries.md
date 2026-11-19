@@ -6,6 +6,15 @@ description: "A required Idempotency-Key header, enforced by a server-side Idemp
 duration: "25 minutes"
 ---
 
+## Learning objectives
+
+- Require an `Idempotency-Key` header on a write endpoint instead of trusting a caller's own retry discipline.
+- Enforce a server-side Idempotent Consumer backed by durable storage, keyed on that header.
+- Replay the first response on a matching body, reject 409 on a repeat key with a different body, and reject 400 on a missing key.
+- Recognize a write endpoint with no guard, placing a duplicate order on retry, as the negative witness this pattern removes.
+
+## Why this matters
+
 An agent that calls a write endpoint and gets a timeout has exactly two
 choices: give up, or retry. Giving up leaves a task unfinished for no reason
 a human would accept; retrying, against an endpoint with no safeguard, risks
@@ -111,6 +120,12 @@ Try:
   response: it names the order the key already belongs to.
 - Remove the `.idempotentConsumer(...)` wrapper and rerun: a repeat key now
   places a second order instead of being replayed.
+
+## Anti-patterns
+
+- **Trusting caller-side retry discipline.** An agent retrying after a timeout has no way to know, from the timeout alone, whether the first attempt landed, so safety cannot depend on the caller remembering not to retry.
+- **No guard so a repeat creates a duplicate order and event.** The pattern's own negative witness: routing every call straight to `placeNewOrder` unconditionally lets two calls with the same key write two orders and publish two events.
+- **Storing keys and responses forever with no eviction.** A table that grows without bound is pure overhead past the point a key could plausibly be replayed; a production deployment needs a retention window.
 
 ## When not to use it
 
