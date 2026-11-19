@@ -73,7 +73,7 @@ mcp_initialize() { # mcp_initialize <token>: sets MCP_SESSION_ID and PROTOCOL_RE
     status=$(curl -s -D "$header_file" -o "$body_file" -w '%{http_code}' \
         -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
         -H "Authorization: Bearer $1" \
-        -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"verify-sh","version":"1.0.0"}}}' \
+        -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{"elicitation":{}},"clientInfo":{"name":"verify-sh","version":"1.0.0"}}}' \
         "$APP/mcp")
     [[ "$status" == "200" ]] || return 1
     MCP_SESSION_ID=$(grep -i '^mcp-session-id:' "$header_file" | tr -d '\r' | cut -d' ' -f2)
@@ -86,7 +86,7 @@ unauthenticated_mcp_call_is_rejected() {
     local status
     status=$(curl -s -o /dev/null -w '%{http_code}' \
         -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
-        -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"verify-sh","version":"1.0.0"}}}' \
+        -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{"elicitation":{}},"clientInfo":{"name":"verify-sh","version":"1.0.0"}}}' \
         "$APP/mcp")
     [[ "$status" == "401" ]]
 }

@@ -1,27 +1,5 @@
 [
   {
-    "name": "orderSummary",
-    "description": "Get an order's id, customer, item, quantity, amount and status.",
-    "annotations": {
-      "destructiveHint": false,
-      "idempotentHint": true,
-      "openWorldHint": false,
-      "readOnlyHint": true
-    },
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "orderId": {
-          "type": "string",
-          "description": "The order id, for example O-9001."
-        }
-      },
-      "required": [
-        "orderId"
-      ]
-    }
-  },
-  {
     "name": "cancelOrder",
     "description": "Cancel an order and refund its amount, after the person at the keyboard explicitly confirms. Only PLACED or PAID orders can be cancelled. Requires the mcp:tools:write scope. If the confirmation is declined, nothing is written and the result is REJECTED_BY_USER, not an error.",
     "annotations": {
@@ -45,6 +23,28 @@
       "required": [
         "orderId",
         "reason"
+      ]
+    }
+  },
+  {
+    "name": "orderSummary",
+    "description": "Get an order's id, customer, item, quantity, amount and status.",
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "The order id, for example O-9001."
+        }
+      },
+      "required": [
+        "orderId"
       ]
     }
   }
