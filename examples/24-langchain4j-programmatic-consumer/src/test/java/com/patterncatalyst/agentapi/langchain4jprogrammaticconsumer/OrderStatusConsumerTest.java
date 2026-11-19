@@ -35,7 +35,7 @@ class OrderStatusConsumerTest {
         while (System.nanoTime() < end) {
             try (Connection c = dataSource.getConnection();
                     PreparedStatement select = c.prepareStatement(
-                            "SELECT order_status FROM orders.agent_order_status_consultation WHERE order_id = ?")) {
+                            "SELECT order_status FROM consumer.agent_order_status_consultation WHERE order_id = ?")) {
                 select.setString(1, orderId);
                 try (ResultSet rs = select.executeQuery()) {
                     if (rs.next()) {

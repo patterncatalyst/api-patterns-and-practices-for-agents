@@ -47,7 +47,7 @@ public class OrderStatusRecorder {
         LOG.infof("tool invoked: orderStatus orderId=%s status=%s", orderId, orderStatus);
         try (Connection c = dataSource.getConnection();
                 PreparedStatement insert = c.prepareStatement(
-                        "INSERT INTO orders.agent_order_status_consultation (order_id, order_status) "
+                        "INSERT INTO consumer.agent_order_status_consultation (order_id, order_status) "
                                 + "VALUES (?, ?) ON CONFLICT (order_id) "
                                 + "DO UPDATE SET order_status = EXCLUDED.order_status, consulted_at = now()")) {
             insert.setString(1, orderId);

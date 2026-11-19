@@ -3,7 +3,7 @@
 # checks that POST /consume/<orderId> makes OrderStatusConsumerAgent (a @RegisterAiService method
 # annotated @McpToolBox("apa-orders")) call the REMOTE orderStatus tool over Streamable HTTP MCP,
 # then call its one local tool, OrderStatusRecorder, which writes a durable
-# orders.agent_order_status_consultation record, increments a Micrometer counter and logs a line.
+# consumer.agent_order_status_consultation record, increments a Micrometer counter and logs a line.
 # Observed by that side effect, never by the model's prose, since qwen3's tool calling is
 # nondeterministic. Includes the negative witness: with MCP_APA_ORDERS_URL pointed at a path no
 # server answers at, the agent can never reach the remote tool, so no record or counter follows.
@@ -51,7 +51,7 @@ consume_order() { # consume_order <orderId>
 
 consultation_status() { # consultation_status <orderId>
     docker exec -e PGPASSWORD=apa apa-postgres psql -h 127.0.0.1 -U apa -d apa -tAc \
-        "SELECT order_status FROM orders.agent_order_status_consultation WHERE order_id='$1'"
+        "SELECT order_status FROM consumer.agent_order_status_consultation WHERE order_id='$1'"
 }
 consultation_recorded() { # the live model's own wording may vary; only presence is asserted, never its prose
     [[ -n "$(consultation_status "$1")" ]]
@@ -77,6 +77,10 @@ loki_has_log() { # loki_has_log <search string>
 }
 
 restart_app() { "${COMPOSE[@]}" up -d --no-deps --force-recreate --wait app >/dev/null; }
+# For the negative witness: a broken @McpToolBox URL makes the MCP client's auto health check fail,
+# so the app never reports ready and `--wait` would abort. Recreate without waiting on health; the
+# process still serves /consume, the remote tool call just fails, so no record is written.
+restart_app_nowait() { "${COMPOSE[@]}" up -d --no-deps --force-recreate app >/dev/null; }
 
 # The model that drives the live tool-call round trip must already be pulled into the ollama
 # volume, or the compose stack comes up with an assistant that cannot answer. This script
@@ -109,8 +113,9 @@ check "Loki has the tool's own log line (observed, not model prose)" poll 90 lok
 # proof the counter never incremented either, and Prometheus keeps the previous container
 # instance's last-exported (nonzero) sample live in its TSDB well past the restart, which would
 # make an absence check on the metric name alone pass vacuously.
-MCP_APA_ORDERS_URL=http://package-api-as-mcp-tools:8080/wrong-mcp-path restart_app
-consume_order O-9002
+MCP_APA_ORDERS_URL=http://package-api-as-mcp-tools:8080/wrong-mcp-path restart_app_nowait
+sleep 15
+consume_order O-9002 || true
 sleep 8
 check "negative witness: a broken @McpToolBox wiring leaves the remote tool unreachable (no consultation row for O-9002, so the counter in OrderStatusRecorder.recordConsultation was never incremented either)" \
     no_consultation O-9002

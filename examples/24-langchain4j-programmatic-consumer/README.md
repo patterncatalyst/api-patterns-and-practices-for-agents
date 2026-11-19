@@ -8,7 +8,7 @@ on the one AiService method registers that server's tools (`orderStatus`, `payme
 `quarkus.langchain4j.mcp.apa-orders.*`. Alongside the remote tool box, the method also carries one
 local tool, `OrderStatusRecorder`, so the model's workflow is: call the remote `orderStatus` tool
 for the order id, then call the local `recordConsultation` tool with what it learned. The local
-tool is the receipt: it writes a durable `orders.agent_order_status_consultation` record,
+tool is the receipt: it writes a durable `consumer.agent_order_status_consultation` record,
 increments a Micrometer counter and logs a line, so the round trip is observable independent of
 the model's own wording, the same reasoning `ShipmentPrepTool` states in
 17-event-triggered-agent-wakeup.
@@ -95,7 +95,7 @@ actually broken and restored.
 | `src/main/java/.../FixtureConsumer.java` | the MODEL=off decision path: calls the remote MCP tool directly through a hand-built `McpClient` |
 | `src/main/java/.../OrderStatusRecorder.java` | the one local `@Tool`: the durable write, the Micrometer counter, the log line |
 | `src/test/java/.../FixtureOrderStatusMcpServer.java` | test-scope-only in-process MCP server standing in for ch13 under `mvn -B verify` |
-| `src/main/resources/db/migration/` | Flyway migration for `orders.agent_order_status_consultation` |
+| `src/main/resources/db/migration/` | Flyway migration for `consumer.agent_order_status_consultation` |
 | `compose.yaml` | includes the shared infrastructure, builds ch13's server as its own service, and adds this consumer |
 | `Containerfile` | UBI 10 multi-stage build; context is `examples/` |
 | `verify.sh` | the checks above |
