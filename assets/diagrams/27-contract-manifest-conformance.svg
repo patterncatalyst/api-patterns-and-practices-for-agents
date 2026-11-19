@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 480" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="30" y="40" width="460" height="330" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="42" y="60" font-size="12" font-weight="700" fill="#888">Readiness probe (not enough)</text>
+<rect x="570" y="40" width="460" height="330" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="582" y="60" font-size="12" font-weight="700" fill="#888">Contract and manifest conformance</text>
+<rect x="60" y="90" width="400" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="260.0" y="113.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">service answers /q/health/ready</text>
+<text x="260.0" y="130.0" font-size="11.5" fill="#555555" text-anchor="middle">the process is up</text>
+<rect x="60" y="170" width="400" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="260.0" y="198.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">the contract and the manifest</text>
+<text x="260.0" y="215.0" font-size="11.5" fill="#555555" text-anchor="middle">are never read by this check</text>
+<rect x="600" y="80" width="400" height="50" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="800.0" y="103.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Schemathesis (pinned), one-shot container</text>
+<text x="800.0" y="120.0" font-size="11.5" fill="#555555" text-anchor="middle">reaches the service by its network name</text>
+<rect x="600" y="150" width="400" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="800.0" y="171.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">served /q/openapi vs committed contract</text>
+<text x="800.0" y="188.0" font-size="11.5" fill="#555555" text-anchor="middle">normalized, sorted-key JSON diff</text>
+<rect x="600" y="216" width="400" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="800.0" y="237.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">served MCP tools/list vs committed manifest</text>
+<text x="800.0" y="254.0" font-size="11.5" fill="#555555" text-anchor="middle">same tool set, same required fields</text>
+<rect x="600" y="282" width="400" height="56" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="800.0" y="308.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">drifted fixture bites</text>
+<text x="800.0" y="325.0" font-size="11.5" fill="#555555" text-anchor="middle">same checks run again, both now fail</text>
+<rect x="30" y="390" width="1000" height="60" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="530.0" y="425.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">No source in either reused service changes: only the committed fixture the check points at changes, and that alone is enough to flip every result from pass to fail.</text>
+<path d="M800,130 L800,150" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M800,196 L800,216" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M800,262 L800,282" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="530" y="26" font-size="15" fill="#444444" text-anchor="middle" font-weight="700">Conformance compares what a service serves against what it commits to</text>
+</svg>

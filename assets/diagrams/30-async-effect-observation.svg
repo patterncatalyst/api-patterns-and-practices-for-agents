@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 470" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="30" y="40" width="460" height="340" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="42" y="60" font-size="12" font-weight="700" fill="#888">The 202 is the same in every case</text>
+<rect x="570" y="40" width="460" height="340" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="582" y="60" font-size="12" font-weight="700" fill="#888">The durable effect is what differs</text>
+<rect x="60" y="80" width="400" height="46" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="260.0" y="101.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">trigger: POST .../cancel-request</text>
+<text x="260.0" y="118.0" font-size="11.5" fill="#555555" text-anchor="middle">answers 202 and holds</text>
+<rect x="60" y="160" width="400" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="260.0" y="183.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">held, approved, rejected or dropped:</text>
+<text x="260.0" y="200.0" font-size="11.5" fill="#555555" text-anchor="middle">the response cannot tell them apart</text>
+<rect x="600" y="80" width="400" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="800.0" y="101.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">gate row + order/payment rows</text>
+<text x="800.0" y="118.0" font-size="11.5" fill="#555555" text-anchor="middle">read with psql under poll</text>
+<rect x="600" y="150" width="400" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="800.0" y="171.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pending-decisions and decisions</text>
+<text x="800.0" y="188.0" font-size="11.5" fill="#555555" text-anchor="middle">topic offsets, keyed by correlation id</text>
+<rect x="600" y="220" width="400" height="46" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="800.0" y="241.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">APPROVE: CANCELLED + REFUNDED</text>
+<text x="800.0" y="258.0" font-size="11.5" fill="#555555" text-anchor="middle">exactly one execution, held under redelivery</text>
+<rect x="600" y="300" width="400" height="46" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="800.0" y="321.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">dropped decision: holds_for window</text>
+<text x="800.0" y="338.0" font-size="11.5" fill="#555555" text-anchor="middle">stays PENDING, no effect ever appears</text>
+<rect x="30" y="400" width="1000" height="50" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="530.0" y="430.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Remove the gate and the pause assertions fail: order CANCELLED and payment REFUNDED the instant the trigger returns, no pending-decision record published.</text>
+<path d="M260,126 L260,160" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M490,103 L600,103" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M800,126 L800,150" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M800,196 L800,220" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M800,266 L800,300" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="530" y="26" font-size="15" fill="#444444" text-anchor="middle" font-weight="700">The effect, not the 202, is what the checks read</text>
+</svg>
