@@ -1,0 +1,8 @@
+[
+  {
+    "name": "orders-status-playbook",
+    "description": "How to read a composed order status: what each order, payment and shipment status value means, and when the three disagree enough to need a human instead of a summary.",
+    "uri": "skill://orders/status-playbook",
+    "mimeType": "text/markdown"
+  }
+]

@@ -1,0 +1,68 @@
+[
+  {
+    "name": "orderStatus",
+    "description": "Get an order's composed status: its own state, its payment status and amount, and its shipment carrier, tracking number and status, all in one response. Use this instead of calling the order, payment and shipment reads separately.",
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "The order id, for example O-9001."
+        }
+      },
+      "required": [
+        "orderId"
+      ]
+    }
+  },
+  {
+    "name": "paymentStatus",
+    "description": "Get only the payment status and amount for an order id, with nothing about the order's own state or its shipment.",
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "The order id, for example O-9001."
+        }
+      },
+      "required": [
+        "orderId"
+      ]
+    }
+  },
+  {
+    "name": "shipmentTracking",
+    "description": "Get only the shipment carrier, tracking number and status for an order id, with nothing about the order's own state or its payment.",
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "The order id, for example O-9001."
+        }
+      },
+      "required": [
+        "orderId"
+      ]
+    }
+  }
+]
