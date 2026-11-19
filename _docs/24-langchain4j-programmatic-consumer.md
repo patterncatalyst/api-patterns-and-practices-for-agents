@@ -29,7 +29,7 @@ An agent that calls a remote tool to look something up and then answers in its o
 
 **A programmatic consumer reads the actual tool-execution result the framework captured, never the model's own restatement of it, so what gets recorded is traceable to the remote call that produced it, not to how the model chose to describe it.**
 
-### How Quarkus models it
+### How Quarkus and Camel model it
 
 `OrderStatusConsumerAgent` is a local langchain4j `AiService`, backed directly by `quarkus-langchain4j-ollama`, run unattended with no human in the loop:
 
