@@ -1,0 +1,68 @@
+[
+  {
+    "name": "searchTools",
+    "description": "Search the full order-to-delivery operation catalog (both domains, both live tools and catalog-only operations) by a keyword in its name or description. Returns a resource link per match; read it to see whether the operation is a live tool to call or a catalog entry to read.",
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "A keyword, for example \"refund\", \"status\" or \"track\"."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "shipping_eta_get",
+    "description": "Get a plain-language estimated delivery window computed from the shipment's current lifecycle status.",
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "The order id, for example O-7001."
+        }
+      },
+      "required": [
+        "orderId"
+      ]
+    }
+  },
+  {
+    "name": "shipping_track_get",
+    "description": "Track this shipment: its carrier, tracking number and lifecycle status, read from the shipping schema only (no order or payment data).",
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "The order id, for example O-7001."
+        }
+      },
+      "required": [
+        "orderId"
+      ]
+    }
+  }
+]

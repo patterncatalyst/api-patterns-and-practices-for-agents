@@ -1,0 +1,142 @@
+[
+  {
+    "id": "order_status_get",
+    "domain": "order",
+    "kind": "tool",
+    "liveToolName": "order_status_get",
+    "description": "Get this order's own lifecycle status, customer, item and amount from the order schema only."
+  },
+  {
+    "id": "order_cancel_eligibility_get",
+    "domain": "order",
+    "kind": "tool",
+    "liveToolName": "order_cancel_eligibility_get",
+    "description": "Get whether this order can still be cancelled right now, derived from its current lifecycle status."
+  },
+  {
+    "id": "order_search_get",
+    "domain": "order",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "Find orders by lifecycle stage and item SKU in one call instead of paging through every row."
+  },
+  {
+    "id": "order_batch_get",
+    "domain": "order",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "Get several orders by id in a single call, separating hits from misses."
+  },
+  {
+    "id": "order_count_get",
+    "domain": "order",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "Count orders matching a filter without returning any order records."
+  },
+  {
+    "id": "order_place_post",
+    "domain": "order",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "Place a new order for a customer and an item SKU."
+  },
+  {
+    "id": "order_cancel_post",
+    "domain": "order",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "Cancel an order that has not shipped yet."
+  },
+  {
+    "id": "order_refund_post",
+    "domain": "order",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "Refund the payment tied to a cancelled order."
+  },
+  {
+    "id": "order_history_get",
+    "domain": "order",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "List every lifecycle change this order has gone through, oldest first."
+  },
+  {
+    "id": "order_customer_orders_get",
+    "domain": "order",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "List every order a given customer has ever placed."
+  },
+  {
+    "id": "shipping_track_get",
+    "domain": "shipping",
+    "kind": "tool",
+    "liveToolName": "shipping_track_get",
+    "description": "Track this shipment: its carrier, tracking number and lifecycle status, from the shipping schema only."
+  },
+  {
+    "id": "shipping_eta_get",
+    "domain": "shipping",
+    "kind": "tool",
+    "liveToolName": "shipping_eta_get",
+    "description": "Get a plain-language estimated delivery window computed from the shipment's lifecycle status."
+  },
+  {
+    "id": "shipping_schedule_post",
+    "domain": "shipping",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "Schedule a shipment for an order that has been paid."
+  },
+  {
+    "id": "shipping_reschedule_post",
+    "domain": "shipping",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "Change the scheduled pickup window for a shipment that has not shipped yet."
+  },
+  {
+    "id": "shipping_cancel_post",
+    "domain": "shipping",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "Cancel a shipment that has not yet moved to in-transit."
+  },
+  {
+    "id": "shipping_carrier_switch_post",
+    "domain": "shipping",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "Switch a pending shipment from one carrier to the other before pickup."
+  },
+  {
+    "id": "shipping_history_get",
+    "domain": "shipping",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "List every lifecycle change this shipment has gone through, oldest first."
+  },
+  {
+    "id": "shipping_label_get",
+    "domain": "shipping",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "Fetch the reference to this shipment's printable label document."
+  },
+  {
+    "id": "shipping_proof_of_delivery_get",
+    "domain": "shipping",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "Fetch the reference to this shipment's proof-of-delivery document."
+  },
+  {
+    "id": "shipping_carrier_info_get",
+    "domain": "shipping",
+    "kind": "catalog",
+    "liveToolName": null,
+    "description": "Get service-level information for a named carrier, FASTLINE road or AIRCO air."
+  }
+]
