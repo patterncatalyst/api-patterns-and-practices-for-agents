@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:patterncatalyst:apa:cancel-gate-decision",
+  "title": "CancelGateDecision",
+  "description": "The human (or automated) decision that resumes a held cancel-and-refund proposal on apa.orders.decisions, matched back to its proposal on apa.orders.pending-decisions by correlationId. APPROVE performs the cancel-and-refund side effect exactly once; REJECT terminates the proposal as REJECTED_BY_USER with no side effect, ever. Registered in Apicurio under the BACKWARD compatibility rule, so a later chapter may only add optional fields to this shape.",
+  "type": "object",
+  "required": ["correlationId", "decision"],
+  "additionalProperties": false,
+  "properties": {
+    "correlationId": {
+      "type": "string",
+      "description": "matches the correlationId on the held apa.orders.pending-decisions proposal",
+      "example": "b3b3c6b0-6e9b-4f2a-9b0a-7a2a9f6b1c10"
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["APPROVE", "REJECT"]
+    },
+    "decidedBy": {
+      "type": ["string", "null"],
+      "description": "who or what made the call; unset for a system/automated decision",
+      "example": "reviewer@example.com"
+    }
+  }
+}
