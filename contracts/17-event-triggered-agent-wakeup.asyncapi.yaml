@@ -1,0 +1,57 @@
+asyncapi: 3.0.0
+info:
+  title: Event-triggered agent wakeup
+  version: 1.0.0
+  description: >
+    The trigger channel for chapter 17's shipping-service agent wakeup. A payment-processed
+    event wakes the shipping agent the instant it is published, instead of a dashboard polling
+    apa.payments.processed for the same fact. The agent's one tool call (prepShipment) is a
+    private side effect of consuming this channel, not a published event, so it is not modelled
+    here.
+channels:
+  paymentsProcessed:
+    address: apa.payments.processed
+    messages:
+      paymentProcessed:
+        $ref: '#/components/messages/PaymentProcessed'
+operations:
+  wakeShippingAgent:
+    action: receive
+    channel:
+      $ref: '#/channels/paymentsProcessed'
+    summary: >
+      shipping-service's Kafka consumer wakes its langchain4j agent on every payment-processed
+      event, rather than polling the topic or the payments.payments table for the same fact.
+    messages:
+      - $ref: '#/channels/paymentsProcessed/messages/paymentProcessed'
+components:
+  messages:
+    PaymentProcessed:
+      name: PaymentProcessed
+      title: Payment processed
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/Payment'
+  schemas:
+    Payment:
+      type: object
+      description: >
+        The domain-model Payment record (com.patterncatalyst.agentapi.Payment), published
+        unchanged as the event payload, the same way 00-stack-check publishes Order unchanged
+        on apa.orders.placed.
+      required: [id, orderId, amount, status]
+      properties:
+        id:
+          type: string
+          example: PAY-9001
+        orderId:
+          type: string
+          example: O-9001
+        amount:
+          type: string
+          description: decimal amount, 2 places, HALF_UP
+          example: "49.99"
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, REFUNDED]
+          example: COMPLETED
