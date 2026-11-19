@@ -40,6 +40,7 @@ appendices only (see CLAUDE.md).
 | Newman | pinned at Part 5 (scripted non-interactive consumption) | | Not yet surveyed; r08-equivalent. |
 | quarkus-smallrye-openapi | platform-managed by quarkus-bom 3.40.1.2 | 2026-11-18 | New r04 dependency (ch07, ch08): generates OpenAPI 3.1.0 from annotations, no separate pin. |
 | quarkus-rest-qute | platform-managed by quarkus-bom 3.40.1.2 | 2026-11-18 | New r04 dependency (ch08): serves the Qute-templated human portal from a Quarkus REST resource; pulls in `quarkus-qute` transitively, same platform version, no separate pin. |
+| quarkus-smallrye-graphql | platform-managed by quarkus-bom 3.40.1.2 | 2026-11-18 | New r04 dependency (ch09): the read-only GraphQL surface (`@GraphQLApi`, `@Query` only, no mutations); the generated schema is served at `/graphql/schema.graphql`, GraphiQL stays dev/test-only (the SmallRye default), no separate pin. |
 
 ## OTel GenAI semantic conventions
 
