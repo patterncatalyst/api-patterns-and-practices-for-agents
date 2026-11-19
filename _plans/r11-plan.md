@@ -7,7 +7,7 @@ output: false
 
 # r11 Implementation Plan: Part 7 "Run in production" (chapters 33-36)
 
-Status: DRAFTED, awaiting owner review before build. Branch `release/r11` off `main` (r10 shipped at 2863acb; cleanup 28c2056). Four pattern chapters, four examples. ch37 (Kubernetes/Strimzi) and ch38 (final project) are r12 and OUT of scope. All house gates apply.
+Status: APPROVED (owner 2026-11-19: ch36 ACLs/quotas documented as variants not live; ch35 realm = additive shared-realm edits; step-up by-hand acr; quarkus-smallrye-fault-tolerance confirmed; ch33 bite = durable cost row). Building. Branch `release/r11` off `main` (r10 shipped at 2863acb; cleanup 28c2056). Four pattern chapters, four examples. ch37 (Kubernetes/Strimzi) and ch38 (final project) are r12 and OUT of scope. All house gates apply.
 
 ## Approach
 
