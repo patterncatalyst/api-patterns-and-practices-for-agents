@@ -6,6 +6,15 @@ description: "A typed-filter search call returns exactly the matching orders dir
 duration: "20 minutes"
 ---
 
+## Learning objectives
+
+- Bind typed, optional filter fields server-side and evaluate the filter inside the backend.
+- Return only the rows that match a filter, capped, in one call, regardless of total table size.
+- Contrast one search call against a pagination sweep in round trips and bytes for the same table.
+- Recognize an endpoint that ignores its own filter as the negative witness for what the pattern exists to prevent.
+
+## Why this matters
+
 Raw offset pagination answers one question: what is on this page. It never
 answers the question an agent actually has, which is which rows match. A
 caller who already knows the filter it wants, a status and an item SKU, gets
@@ -101,6 +110,12 @@ Try:
   the pagination sweep on your own run.
 - Hardcode the search endpoint to ignore its filter and rerun: it still
   returns in one call, but no longer the right rows.
+
+## Anti-patterns
+
+- **Raw offset pagination as the only way to find a row.** A caller who does not already know where a target sits has no way to skip ahead to it, only a page-by-page sweep.
+- **Ignoring the filter and running the unfiltered query.** The pattern's own negative witness: the call still looks cheap, one round trip, but returns every status and every SKU instead of the expected matches.
+- **An uncapped search returning an unbounded response.** A filter too broad to narrow anything should still stop at a result cap, not turn into a full-table dump.
 
 ## When not to use it
 
