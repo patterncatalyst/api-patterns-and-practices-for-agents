@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:patterncatalyst:apa:ingest-order",
+  "title": "IngestOrder",
+  "description": "The body of POST /ingest/orders: an order an agent proposes to place. Validated in-app before the call is accepted; a payload that fails this schema is rejected with a 400 problem+json, never partially accepted.",
+  "type": "object",
+  "required": ["orderId", "customerId", "itemSku", "quantity", "amount"],
+  "additionalProperties": false,
+  "properties": {
+    "orderId": {
+      "type": "string",
+      "minLength": 1,
+      "example": "O-9101"
+    },
+    "customerId": {
+      "type": "string",
+      "minLength": 1,
+      "example": "C-4821"
+    },
+    "itemSku": {
+      "type": "string",
+      "minLength": 1,
+      "example": "SKU-7734"
+    },
+    "quantity": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "amount": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "multipleOf": 0.01,
+      "description": "two-decimal order amount"
+    }
+  }
+}

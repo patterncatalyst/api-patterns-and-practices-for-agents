@@ -1,0 +1,51 @@
+[
+  {
+    "name": "cancelOrder",
+    "description": "Cancel an order and refund its amount. Only PLACED or PAID orders can be cancelled. Requires the mcp:tools:write scope and a token whose acr claim carries the step-up assurance level: a plain read-scoped or non-exchanged token is rejected before the order is ever looked up.",
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "The order id, for example O-9001."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why the order is being cancelled, recorded for audit."
+        }
+      },
+      "required": [
+        "orderId",
+        "reason"
+      ]
+    }
+  },
+  {
+    "name": "orderSummary",
+    "description": "Get an order's id, customer, item, quantity, amount and status.",
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "The order id, for example O-9001."
+        }
+      },
+      "required": [
+        "orderId"
+      ]
+    }
+  }
+]

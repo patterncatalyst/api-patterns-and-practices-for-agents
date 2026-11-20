@@ -58,6 +58,7 @@ XREF_WORD_RE = re.compile(
     r"|\b(?:chapters|parts|appendices)\s+(?:\d+|[A-E]|one|two|three|four|five|six|seven|eight)\b"
     r"|\bparts?\s+(?:one|two|three|four|five|six|seven|eight)\b"
     r"|\bexamples?\s+\d{2}\b|\b(?:these|those|the\s+earlier|the\s+other)\s+examples\b", re.I)
+CHREF_RE = re.compile(r"\bch\.?\s?\d{1,2}\b", re.I)  # the abbreviated 'ch13' / 'ch 13' chapter-reference form
 ACCOMPANIES_RE = re.compile(r"accompanies \[[^\]]*\]\(\{\{[^)]*\)")
 XREF_SOURCE_RE = re.compile(
     r"Geewax|Hohpe|Woolf|Richardson|Amundsen|Ruby|Lauret|Dehghani|"
@@ -74,7 +75,7 @@ FORWARDING = re.compile(
 
 def xref_hit(t: str) -> str | None:
     """The first cross-reference in a prose line, or None. A chapter of another book cited as a source is allowed."""
-    for rx in (XREF_RE, XREF_WORD_RE):
+    for rx in (XREF_RE, XREF_WORD_RE, CHREF_RE):
         for x in rx.finditer(t):
             if not XREF_SOURCE_RE.search(t[max(0, x.start() - 90):x.start() + len(x.group(0)) + 40]):
                 return x.group(0)

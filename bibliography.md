@@ -41,6 +41,8 @@ Works only: books, papers and specifications. Documentation pages are cited unde
     <tr><td><a href="https://json-schema.org/specification" rel="noopener">JSON Schema specification</a></td><td>JSON Schema organization</td><td>The event-schema shape registered under Apicurio's BACKWARD compatibility rule</td></tr>
     <tr><td><a href="https://www.rfc-editor.org/rfc/rfc9457.html" rel="noopener">RFC 9457: Problem Details for HTTP APIs</a></td><td>IETF</td><td>The instructive-error pattern's wire format</td></tr>
     <tr><td><a href="https://www.rfc-editor.org/rfc/rfc8693.html" rel="noopener">RFC 8693: OAuth 2.0 Token Exchange</a></td><td>IETF</td><td>Delegated identity when an agent calls a tool on a user's behalf</td></tr>
+    <tr><td><a href="https://www.rfc-editor.org/rfc/rfc9470.html" rel="noopener">RFC 9470: OAuth 2.0 Step Up Authentication Challenge Protocol</a></td><td>IETF</td><td>The acr step-up concept behind the destructive-tool assurance gate</td></tr>
+    <tr><td><a href="https://openid.net/specs/openid-connect-core-1_0.html" rel="noopener">OpenID Connect Core 1.0</a></td><td>OpenID Foundation</td><td>The acr (Authentication Context Class Reference) claim carrying a token's assurance level</td></tr>
     <tr><td><a href="https://llmstxt.org/" rel="noopener">llms.txt</a></td><td>Jeremy Howard and contributors</td><td>The semantic-metadata and dual-use-portal pattern, and Appendix A</td></tr>
     <tr><td><a href="https://agents.md/" rel="noopener">AGENTS.md</a></td><td>AGENTS.md contributors</td><td>The agent-facing repository convention named in the catalog's landscape vocabulary</td></tr>
     <tr><td><a href="https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview" rel="noopener">Tool use with Claude</a></td><td>Anthropic</td><td>Tool-call shape, parallel tool use, and the contract an agent expects from a tool definition</td></tr>
@@ -66,6 +68,8 @@ Works only: books, papers and specifications. Documentation pages are cited unde
     <tr><td><a href="https://kafka.apache.org/documentation/" rel="noopener">Apache Kafka</a></td><td>The broker, clients, and topics behind the async patterns</td></tr>
     <tr><td><a href="https://strimzi.io/documentation/" rel="noopener">Strimzi</a></td><td>Kafka on Kubernetes for the final project</td></tr>
     <tr><td><a href="https://www.apicur.io/registry/docs/" rel="noopener">Apicurio Registry</a></td><td>Schema registry and compatibility rules for the async contracts</td></tr>
+    <tr><td><a href="https://smallrye.io/docs/smallrye-fault-tolerance/" rel="noopener">SmallRye Fault Tolerance</a></td><td>The @RateLimit annotation and RateLimitException behind the ingest rate-limit guardrail</td></tr>
+    <tr><td><a href="https://camel.apache.org/components/latest/json-validator-component.html" rel="noopener">Camel JSON Schema Validator component</a></td><td>JSON Schema validation for the ingest schema-validity guardrail</td></tr>
     <tr><td><a href="https://www.keycloak.org/documentation" rel="noopener">Keycloak</a></td><td>OIDC, PKCE, client_credentials, and the token exchange flows behind the identity guardrails</td></tr>
     <tr><td><a href="https://docs.claude.com/en/docs/claude-code/overview" rel="noopener">Claude Code documentation</a></td><td>Consuming an MCP server and building a Claude Code Skill</td></tr>
     <tr><td><a href="https://docs.ollama.com/" rel="noopener">Ollama</a></td><td>The local model runtime behind the langchain4j consuming examples</td></tr>

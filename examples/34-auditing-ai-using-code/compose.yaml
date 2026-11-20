@@ -1,0 +1,87 @@
+name: apa-34
+
+include:
+  - path: ../_infra/compose.yaml
+  - path: ../_infra/compose.lgtm.yaml
+
+services:
+  # The target of every outbound call this chapter's app makes: ch13's MCP tool server, built
+  # from its own Containerfile and build context (examples/, so it can install the shared domain
+  # model first, exactly like ch13's own compose.yaml). Reused unchanged; this example never
+  # copies or forks its code.
+  package-api-as-mcp-tools:
+    build:
+      context: ..
+      dockerfile: 13-package-api-as-mcp-tools/Containerfile
+    container_name: apa-34-package-api-as-mcp-tools
+    environment:
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+    depends_on:
+      postgres:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+  # The INWARD audit's counterpart: every outbound call this app's own langchain4j code makes
+  # (to package-api-as-mcp-tools above) is appended to an audit log before it goes out, through
+  # ONE AuditedToolCaller bean. Owns its own audit/consumer schemas on the shared Postgres; ch13
+  # owns orders/payments/shipping, so there is no table collision and no need for a dedicated
+  # database (contrast ch27/ch32, which needed one because two apps owned the SAME orders.orders).
+  app:
+    build:
+      context: ..
+      dockerfile: 34-auditing-ai-using-code/Containerfile
+    container_name: apa-auditing-ai-using-code
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      CAMEL_COMPONENT_KAFKA_BROKERS: kafka:9094
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+      QUARKUS_LANGCHAIN4J_OLLAMA_BASE_URL: http://ollama:11434
+      OUTBOUND_MCP_TARGET_URL: ${OUTBOUND_MCP_TARGET_URL:-http://package-api-as-mcp-tools:8080/mcp}
+      # Demo code: the biting negative witness. true (the default) appends an audit record before
+      # every outbound call AuditedToolCaller makes; false lets the outbound call still succeed
+      # with no audit record appended for it.
+      AUDIT_INTERCEPTOR_ENABLED: ${AUDIT_INTERCEPTOR_ENABLED:-true}
+      # Demo code: the append-only guard's own negative witness (21-replayable-agent-memory-event-sourced-audit
+      # precedent). false (the default) rejects a demo mutate attempt against the projection.
+      AUDIT_MUTABLE: ${AUDIT_MUTABLE:-false}
+    depends_on:
+      package-api-as-mcp-tools:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      apicurio:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+networks:
+  apa:
+    name: apa
