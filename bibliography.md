@@ -68,6 +68,8 @@ Works only: books, papers and specifications. Documentation pages are cited unde
     <tr><td><a href="https://kafka.apache.org/documentation/" rel="noopener">Apache Kafka</a></td><td>The broker, clients, and topics behind the async patterns</td></tr>
     <tr><td><a href="https://strimzi.io/documentation/" rel="noopener">Strimzi</a></td><td>Kafka on Kubernetes for the final project</td></tr>
     <tr><td><a href="https://www.apicur.io/registry/docs/" rel="noopener">Apicurio Registry</a></td><td>Schema registry and compatibility rules for the async contracts</td></tr>
+    <tr><td><a href="https://smallrye.io/docs/smallrye-fault-tolerance/" rel="noopener">SmallRye Fault Tolerance</a></td><td>The @RateLimit annotation and RateLimitException behind the ingest rate-limit guardrail</td></tr>
+    <tr><td><a href="https://github.com/networknt/json-schema-validator" rel="noopener">networknt json-schema-validator</a></td><td>In-app JSON Schema validation for the ingest schema-validity guardrail</td></tr>
     <tr><td><a href="https://www.keycloak.org/documentation" rel="noopener">Keycloak</a></td><td>OIDC, PKCE, client_credentials, and the token exchange flows behind the identity guardrails</td></tr>
     <tr><td><a href="https://docs.claude.com/en/docs/claude-code/overview" rel="noopener">Claude Code documentation</a></td><td>Consuming an MCP server and building a Claude Code Skill</td></tr>
     <tr><td><a href="https://docs.ollama.com/" rel="noopener">Ollama</a></td><td>The local model runtime behind the langchain4j consuming examples</td></tr>

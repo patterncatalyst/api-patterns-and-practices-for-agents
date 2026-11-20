@@ -1,0 +1,47 @@
+name: apa-36
+
+include:
+  - path: ../_infra/compose.yaml
+  - path: ../_infra/compose.lgtm.yaml
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: 36-traffic-and-resource-guardrails/Containerfile
+    container_name: apa-traffic-and-resource-guardrails
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+      # Demo code: negative witness (b). false makes IngestSchemaValidator.validate return no
+      # violations unconditionally, so an invalid payload is accepted instead of rejected.
+      SCHEMA_GATE_ENABLED: ${SCHEMA_GATE_ENABLED:-true}
+      # Demo code: negative witness (a). A generous override of the @RateLimit annotation's own
+      # value and window, through SmallRye Fault Tolerance's own global configuration mechanism,
+      # so the limit effectively never triggers and the (N+1)th call returns 2xx instead of 429.
+      QUARKUS_FAULT_TOLERANCE_GLOBAL_RATE_LIMIT_VALUE: ${RATE_LIMIT_VALUE_OVERRIDE:-5}
+      QUARKUS_FAULT_TOLERANCE_GLOBAL_RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW_OVERRIDE:-30}
+    volumes:
+      # Read-only: the committed ingest schema IngestSchemaValidator loads at startup.
+      - ../../contracts:/deployments/contracts:ro,Z
+    depends_on:
+      postgres:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+networks:
+  apa:
+    name: apa
