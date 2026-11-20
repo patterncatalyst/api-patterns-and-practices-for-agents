@@ -50,7 +50,10 @@ ORDER_1="O-38001"   # paid through the facade, consumed by the woken shipping wr
 ORDER_2="O-38002"   # the mesh-hop witness: paid (by event) while the writer is scaled to 0
 
 APICURIO="http://127.0.0.1:${TP_APICURIO}"
-GROUP="apa38"
+# A per-run group id: the cluster Apicurio persists artifacts across runs (unlike the compose
+# registry's per-run `down -v`), so a fixed group would 409 on the second run's register. A unique
+# group per run keeps the governance witness a clean create every time.
+GROUP="apa38-$(date +%s)"
 ARTIFACT="apa.audit.agent-action.v2"
 BASELINE_SCHEMA=../../contracts/21-audit-agent-action.schema.json
 COMPATIBLE_SCHEMA=../../contracts/32-audit-agent-action.v2-compatible.schema.json
@@ -329,6 +332,15 @@ check "shipping-track rolled out Ready"  kubectl rollout status deploy/shipping-
 check "shipping-writer rolled out Ready, owning the shipping database" \
     kubectl rollout status "deploy/$WRITER_DEPLOY" -n "$APP_NS" --timeout=300s
 
+# ─── Host NodePort readiness gate (silent): after a fresh apply, the workload PeerAuthentication
+# that makes port 8080 PERMISSIVE takes a few seconds to reach each sidecar; until it does, a host
+# call to a meshed pod is still dropped. Wait for each host-facing tool surface to answer over its
+# own NodePort before driving it, so the first tool call does not race that propagation. ───────────
+nodeport_health_ready() { curl -sf -m 5 -o /dev/null "http://127.0.0.1:$1/q/health/ready"; }
+poll 90 nodeport_health_ready "$TP_ORDERS"
+poll 90 nodeport_health_ready "$TP_PAYMENTS"
+poll 90 nodeport_health_ready "$TP_SHIPPING_TRACK"
+
 # ─── The positive path: orders read, payment taken, event produced, shipment written, read back ──
 check "ORDERS: orderStatus composes the seeded O-9001 from all three schemas in the orders database" \
     orders_order_status_composed
@@ -361,9 +373,10 @@ check "governance: a BACKWARD-incompatible version (a new required field) is rej
 
 # ─── Biting negative witness: the mesh-hop cut (scale the shipping writer to 0, never a source
 # edit), isolating the break to one hop: paid but unshipped. ─────────────────────────────────────
-check "mesh-hop witness: shipping writer scaled to 0 and rolled out" bash -c '
+check "mesh-hop witness: shipping writer scaled to 0 and its pod fully terminated" bash -c '
     kubectl scale "deployment/$1" -n "$2" --replicas=0 &&
-    kubectl rollout status "deploy/$1" -n "$2" --timeout=120s
+    kubectl rollout status "deploy/$1" -n "$2" --timeout=120s &&
+    kubectl wait --for=delete pod -l app.kubernetes.io/name=event-triggered-agent-wakeup -n "$2" --timeout=120s
 ' _ "$WRITER_DEPLOY" "$APP_NS"
 
 produce_payment "PAY-38002" "$ORDER_2" 149.99 >/dev/null
