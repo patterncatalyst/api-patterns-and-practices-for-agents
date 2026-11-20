@@ -95,6 +95,9 @@ audit_row_direction() { curl -sf "$APP/audit/log/$1" | jq -r '.[0].direction'; }
 audit_row_target() { curl -sf "$APP/audit/log/$1" | jq -r '.[0].target'; }
 audit_row_id() { curl -sf "$APP/audit/log/$1" | jq -r '.[0].id'; }
 audit_row_digest() { curl -sf "$APP/audit/log/$1" | jq -r '.[0].argumentDigest'; }
+audit_direction_is_outbound() { [[ "$(audit_row_direction "$1")" == OUTBOUND ]]; } # <correlationId>
+audit_target_is_orderstatus() { [[ "$(audit_row_target "$1")" == orderStatus ]]; } # <correlationId>
+audit_digest_is() { [[ "$(audit_row_digest "$1")" == "$2" ]]; }                     # <correlationId> <digest>
 
 mutate_status() { # mutate_status <id> <newDigest>: prints the HTTP status
     curl -s -o "$TMP/mutate.json" -w '%{http_code}' -X POST -H 'Content-Type: application/json' \
@@ -164,8 +167,8 @@ precondition "POST /consume succeeds for $SEEDED_ORDER" consume_order "$SEEDED_O
 check "the business result for $SEEDED_ORDER carries ch13's seeded status and UNGUESSABLE tracking (observed in PostgreSQL, not model prose)" \
     poll 120 business_result_recorded "$SEEDED_ORDER"
 check "exactly one audit row exists for $SEEDED_ORDER" poll 30 audit_count_is "$SEEDED_ORDER" 1
-check "the audit row's direction is OUTBOUND" bash -c "[[ \"\$(audit_row_direction $SEEDED_ORDER)\" == OUTBOUND ]]"
-check "the audit row's target is orderStatus" bash -c "[[ \"\$(audit_row_target $SEEDED_ORDER)\" == orderStatus ]]"
+check "the audit row's direction is OUTBOUND" poll 30 audit_direction_is_outbound "$SEEDED_ORDER"
+check "the audit row's target is orderStatus" poll 30 audit_target_is_orderstatus "$SEEDED_ORDER"
 check "a replay from the beginning of the log reproduces the live projection" poll 60 replay_matches_live
 
 echo "Append-only, by default"
@@ -173,7 +176,7 @@ AUDIT_ID="$(audit_row_id "$SEEDED_ORDER")"
 ORIGINAL_DIGEST="$(audit_row_digest "$SEEDED_ORDER")"
 check "the log is append-only: a mutate attempt is rejected (403) while audit.mutable is false" mutate_rejected "$AUDIT_ID"
 check "the rejected mutate attempt left the record unchanged" \
-    bash -c "[[ \"\$(audit_row_digest $SEEDED_ORDER)\" == '$ORIGINAL_DIGEST' ]]"
+    audit_digest_is "$SEEDED_ORDER" "$ORIGINAL_DIGEST"
 
 echo "Biting negative witness: AUDIT_INTERCEPTOR_ENABLED=false still calls out, but appends no audit record"
 clear_result "$SEEDED_ORDER"

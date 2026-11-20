@@ -44,6 +44,13 @@ public class OutboundCallResultRecorder {
         String trackingNumber = null;
         try {
             JsonNode node = objectMapper.readTree(orderStatusResult);
+            // The remote tool returns one JSON object. On the model-driven path langchain4j hands
+            // that result back as a JSON string literal (the object, escaped inside quotes), so one
+            // parse yields a textual node whose text is the object; parse that once more. On the
+            // fixture path the object arrives directly. Both end at the same object node.
+            if (node.isTextual()) {
+                node = objectMapper.readTree(node.asText());
+            }
             if (node.hasNonNull("orderStatus")) {
                 orderStatus = node.get("orderStatus").asText();
             }
