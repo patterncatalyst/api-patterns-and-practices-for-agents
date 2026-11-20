@@ -22,6 +22,7 @@ resources:
   - shipping-track-deployment.yaml
   - shipping-track-service.yaml
   - ../17-event-triggered-agent-wakeup
+  - peerauthentication.yaml
 
 patches:
   - path: shipping-writer-jdbc-patch.yaml

@@ -53,7 +53,7 @@ spec:
                   name: apa-postgres-app
                   key: password
             - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://apa-postgres-rw.apa-data.svc.cluster.local:5432/shipping"
+              value: "jdbc:postgresql://apa-postgres-rw.apa-data.svc.cluster.local:5432/shipping_track"
           startupProbe:
             httpGet:
               path: /q/health/started

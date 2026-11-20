@@ -141,24 +141,31 @@ psql_db() { # psql_db <database> <SQL>: the apa role, password via the remote sh
         _ "$1" "$2"
 }
 
-valid_db_name() { [[ "$1" =~ ^[a-z_]+$ ]]; }  # a fixed set of 3 literal constants; validated anyway
+valid_db_name() { [[ "$1" =~ ^[a-z_]+$ ]]; }  # a fixed set of literal constants; validated anyway
 
-ensure_database() { # ensure_database <name>: Postgres has no CREATE DATABASE IF NOT EXISTS, so
-                     # gate the create on an existence check first.
+# One database per stateful deployable, so no service, even within one product, shares a mutable
+# store with another: orders (ch13), payments (ch15 payment-service), shipping (ch17 writer, owns
+# shipment_prep), shipping_track (ch14 read port, owns its own seeded read copy). Giving the two
+# shipping deployables separate databases is what keeps their independent Flyway histories from
+# colliding in a shared "shipping" schema.
+MESH_DATABASES=(orders payments shipping shipping_track)
+
+reset_database() { # reset_database <name>: drop and recreate, so every run starts from an empty
+                   # database (the cluster Postgres persists across redeploys; this is the fresh-run
+                   # contract's per-product analogue of the compose examples' `down -v`). WITH
+                   # (FORCE) terminates any connection a prior run's pod still holds (Postgres 13+).
     local db="$1"
     valid_db_name "$db" || { printf 'invalid database name: %s\n' "$db" >&2; return 1; }
-    local exists; exists="$(psql_super "SELECT 1 FROM pg_database WHERE datname='${db}'")"
-    if [[ "$exists" != "1" ]]; then
-        psql_super "CREATE DATABASE ${db}" >/dev/null || return 1
-    fi
+    psql_super "DROP DATABASE IF EXISTS ${db} WITH (FORCE)" >/dev/null || return 1
+    psql_super "CREATE DATABASE ${db}" >/dev/null || return 1
     psql_super "GRANT ALL ON DATABASE ${db} TO apa" >/dev/null || return 1
     psql_super "ALTER DATABASE ${db} OWNER TO apa" >/dev/null || return 1
 }
 
-databases_exist_and_are_owned_by_apa() {
+databases_reset_and_owned_by_apa() {
     local db owner
-    for db in orders payments shipping; do
-        ensure_database "$db" || return 1
+    for db in "${MESH_DATABASES[@]}"; do
+        reset_database "$db" || return 1
         owner="$(psql_super "SELECT pg_catalog.pg_get_userbyid(datdba) FROM pg_database WHERE datname='${db}'")"
         [[ "$owner" == "apa" ]] || return 1
     done
@@ -304,9 +311,10 @@ breaking_version_rejected() {
     [[ "$VERSION_STATUS" == "400" ]] && jq -e '.name == "RuleViolationException"' "$VERSION_BODY_FILE" >/dev/null
 }
 
-# ─── Per-product databases: created idempotently, before the mesh starts ─────────────────────────
-check "the three per-product databases exist, each owned by apa (orders, payments, shipping)" \
-    databases_exist_and_are_owned_by_apa
+# ─── Per-deployable databases: reset fresh (DROP WITH FORCE + CREATE) before the mesh starts, so
+# each service migrates a clean database and no run inherits the last run's rows. ─────────────────
+check "every mesh database is reset fresh and owned by apa (orders, payments, shipping, shipping_track)" \
+    databases_reset_and_owned_by_apa
 
 # ─── Fresh deploy: this layer only, never the shared platform ───────────────────────────────────
 check "the data mesh applied fresh across all 5 deployments in the apa namespace" bash -c '
@@ -318,14 +326,8 @@ check "orders rolled out Ready"          kubectl rollout status deploy/orders -n
 check "payments-facade rolled out Ready" kubectl rollout status deploy/payments-facade -n "$APP_NS" --timeout=300s
 check "payment-service rolled out Ready" kubectl rollout status deploy/payment-service -n "$APP_NS" --timeout=300s
 check "shipping-track rolled out Ready"  kubectl rollout status deploy/shipping-track -n "$APP_NS" --timeout=300s
-check "shipping-writer rolled out Ready, now owning the shipping database" \
+check "shipping-writer rolled out Ready, owning the shipping database" \
     kubectl rollout status "deploy/$WRITER_DEPLOY" -n "$APP_NS" --timeout=300s
-
-# ─── Fresh data: the shared cluster Postgres persists rows across redeploys, so clear this run's
-# own order ids first (literal constants, not interpolated input) to keep the run repeatable and
-# the negative witness honest. ──────────────────────────────────────────────────────────────────
-psql_db payments "DELETE FROM payments.payments WHERE order_id IN ('${ORDER_1}')" >/dev/null || true
-psql_db shipping "DELETE FROM shipping.shipment_prep WHERE order_id IN ('${ORDER_1}','${ORDER_2}')" >/dev/null || true
 
 # ─── The positive path: orders read, payment taken, event produced, shipment written, read back ──
 check "ORDERS: orderStatus composes the seeded O-9001 from all three schemas in the orders database" \

@@ -9,7 +9,7 @@ duration: "45 minutes"
 ## Learning objectives
 
 - Assemble several already-built agent-facing services into one data mesh without re-forking a line of their code.
-- Give each data product its own database in a shared cluster, so domain ownership is a checkable boundary instead of a diagram.
+- Give each deployable its own database in a shared cluster, so no service reaches another's store and domain ownership is a checkable boundary instead of a diagram.
 - Stand up a cross-cutting governance plane, a schema compatibility gate, a caller scope and a replayable audit obligation, that applies to every product instead of being built into any one of them.
 - Prove an end-to-end agent-driven scenario across independently owned products by asserting captured side effects only, never a model's own narration.
 
@@ -23,7 +23,7 @@ The final project assembles three such products, orders, payments and shipping, 
 
 ## Deploying the mesh
 
-Orders, payments and shipping each own one database in the cluster's single Postgres instance, created before any product starts and never touched by another product's Deployment. Orders stays read-only against a database it fully owns. Payments splits into an agent-facing facade with no database of its own and an internal service that owns the payments database alone, reached only by an in-cluster call, never from the host. Shipping splits the other way: a read port and an event-woken writer share one database in two separate schemas, so their migration histories never collide and neither one's table name collides with the other's.
+Each service owns one database in the cluster's single Postgres instance, reset before the mesh starts and never touched by another service's Deployment. Orders stays read-only against a database it fully owns. Payments splits into an agent-facing facade with no database of its own and an internal service that owns the payments database alone, reached only by an in-cluster call, never from the host. Shipping splits the other way: a read port and an event-woken writer, each owning its own database, so neither can reach the other's store and their independent migration histories never collide.
 
 Every product keeps the tool surface, the contract and the observability it already proved; what changes is only the environment each Deployment reads, from a shared configuration map on the same cluster the rest of the mesh runs on. One aggregate manifest applies all five Deployments and their Services together, so bringing up the whole mesh, or tearing down this layer alone, is one command, the self-serve platform underneath every product rather than a per-product chore.
 

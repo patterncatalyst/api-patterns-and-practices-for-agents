@@ -36,7 +36,7 @@ its governance rule, and its NodePort. Every entity, event and topic name below 
 | Domain owner | shipping-service |
 | Reused services | `examples/14-domain-split-progressive-discovery` (read port, named MCP server `shipping`); `examples/17-event-triggered-agent-wakeup` (event-woken writer) |
 | Output ports | MCP tools (`shipping_track_get`, `shipping_eta_get`): `contracts/14-shipping-tools.mcp.json`; shared catalog resource: `contracts/14-catalog.mcp.json`; async: `contracts/17-event-triggered-agent-wakeup.asyncapi.yaml` |
-| Database | `shipping` (schema `orders` for the read port's own order history, default-schema `orders`; schema `shipping` for both the read port's `shipments` table and the writer's `shipment_prep` table, default-schema `shipping` for the writer; the two Flyway histories land in different schemas and never collide) |
+| Databases | `shipping` (the event-woken writer's `shipment_prep` table, owned by `examples/17-event-triggered-agent-wakeup` alone) and `shipping_track` (the read port's own seeded `orders`/`shipping` copies, owned by `examples/14-domain-split-progressive-discovery` alone); two separate databases, one per deployable, so the two independent Flyway histories never collide |
 | Kafka topics | consumes `apa.payments.processed` (groupId `shipping-wakeup`, earliest offset) |
 | Governance rule | Apicurio BACKWARD on any future schema registered for this product; Keycloak scope `mcp:tools:read` on the read port's tools; audit obligation: every `apa.payments.processed` record the writer consumes is the INBOUND trigger, and the carrier decision it writes to `shipment_prep` is the OUTBOUND record, per `contracts/21-audit-agent-action.schema.json` |
 | NodePort | 127.0.0.1:8090 to nodePort 30390, path `/mcp/shipping` (the read port only; the writer has no host-facing tool surface, driven by the Kafka event and asserted through its database row) |
@@ -58,3 +58,10 @@ Every product above deploys through one aggregate kustomization,
 `examples/_k8s` builds and the one shared `apa-app-config` ConfigMap every Deployment reads
 (`examples/_k8s/base/config.yaml`). No product stands up its own cluster, registry or identity
 provider.
+
+The `apa` namespace runs Istio with STRICT mutual TLS by default. A host request arriving through a
+product's NodePort originates outside the mesh and carries no client certificate, so a workload
+`PeerAuthentication` (`apps/38-data-mesh/peerauthentication.yaml`) sets the data products' HTTP tool
+port (8080) to PERMISSIVE, which accepts both that host plaintext and in-mesh mTLS. Every other port
+stays STRICT: the payments facade still reaches the internal `payment-service` over gRPC on 9000
+under mutual TLS.
