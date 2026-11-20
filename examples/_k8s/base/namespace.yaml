@@ -1,0 +1,14 @@
+# namespace.yaml - the application namespace. Chapter app Deployments land
+# here in a later wave; this wave ships the namespace and its mesh opt-in
+# ahead of them.
+#
+# istio-injection: enabled is the namespace-wide mesh opt-in (see
+# ../setup-istio.sh for why this is safe here and not in apa-data). The label
+# lives on the namespace from the moment it is created, before Istio itself
+# is installed, so there is no separate labeling step to forget.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apa
+  labels:
+    istio-injection: enabled

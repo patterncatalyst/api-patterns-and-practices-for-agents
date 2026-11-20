@@ -1,0 +1,21 @@
+# service.yaml - ClusterIP only, matching ../../../../base/app-template.yaml's convention: host
+# access to a chapter app goes through the same mesh and Service model a cluster user would see,
+# never a NodePort. The setup chapter's verify.sh reaches the platform's own NodePorts (Kafka,
+# PostgreSQL, Grafana) instead of this app directly; the Service exists for in-cluster callers and
+# for `kubectl exec` from a debug pod, never from the host.
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-triggered-agent-wakeup
+  namespace: apa
+  labels:
+    app.kubernetes.io/name: event-triggered-agent-wakeup
+    app.kubernetes.io/part-of: apa
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: event-triggered-agent-wakeup
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

@@ -1,0 +1,22 @@
+# apicurio-nodeport.yaml - the Service for Apicurio Registry
+# (../../setup-apicurio.sh owns the Deployment). `port: 8080` matches the
+# container's own listening port, so base/config.yaml's
+# APICURIO_REGISTRY_URL (apicurio.apa-data.svc.cluster.local:8080) resolves
+# correctly; the host port (8081) is a separate number, set only by the
+# `nodePort` below plus minikube's --ports publish mapping.
+apiVersion: v1
+kind: Service
+metadata:
+  name: apicurio
+  namespace: apa-data
+  labels:
+    app.kubernetes.io/name: apicurio-registry
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: apicurio-registry
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      nodePort: 30808

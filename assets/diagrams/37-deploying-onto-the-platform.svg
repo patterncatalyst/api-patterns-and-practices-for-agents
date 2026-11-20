@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 520" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="30" y="15" width="1020" height="95" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="42" y="35" font-size="12" font-weight="700" fill="#888">Host 127.0.0.1 (verify.sh): NodePorts only, no forwarding</text>
+<rect x="30" y="135" width="330" height="150" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="42" y="155" font-size="12" font-weight="700" fill="#888">apa namespace (Istio sidecar, STRICT mTLS)</text>
+<rect x="400" y="135" width="380" height="310" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="412" y="155" font-size="12" font-weight="700" fill="#888">apa-data namespace</text>
+<rect x="820" y="135" width="230" height="150" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="832" y="155" font-size="12" font-weight="700" fill="#888">observability namespace</text>
+<rect x="50" y="45" width="150" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="125.0" y="70.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">kcat -P</text>
+<text x="125.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">produces to the Kafka NodePort</text>
+<rect x="220" y="45" width="190" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="315.0" y="70.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">kubectl exec ... psql</text>
+<text x="315.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">asserts the shipment_prep row</text>
+<rect x="430" y="45" width="240" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="550.0" y="70.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">curl Tempo, Prometheus, Loki</text>
+<text x="550.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">over their own NodePorts</text>
+<rect x="690" y="45" width="220" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="800.0" y="70.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">kubectl set env + rollout</text>
+<text x="800.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">the biting negative witness</text>
+<rect x="55" y="180" width="280" height="90" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="195.0" y="215.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">event-triggered-agent-wakeup</text>
+<text x="195.0" y="232.5" font-size="11.5" fill="#555555" text-anchor="middle">Deployment + Service, ClusterIP</text>
+<text x="195.0" y="247.5" font-size="11.5" fill="#555555" text-anchor="middle">the same image the compose example builds</text>
+<rect x="420" y="175" width="160" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="500.0" y="208.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Kafka (Strimzi)</text>
+<text x="500.0" y="225.0" font-size="11.5" fill="#555555" text-anchor="middle">apa-kafka-bootstrap:9092</text>
+<rect x="600" y="175" width="160" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="680.0" y="208.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">PostgreSQL (CloudNativePG)</text>
+<text x="680.0" y="225.0" font-size="11.5" fill="#555555" text-anchor="middle">apa-postgres-rw:5432</text>
+<rect x="510" y="280" width="160" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="590.0" y="313.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Ollama</text>
+<text x="590.0" y="330.0" font-size="11.5" fill="#555555" text-anchor="middle">in-cluster only, 11434</text>
+<rect x="850" y="180" width="170" height="80" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="935.0" y="218.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">otel-lgtm</text>
+<text x="935.0" y="235.0" font-size="11.5" fill="#555555" text-anchor="middle">Tempo, Prometheus, Loki, Grafana</text>
+<path d="M125,100 L480,175" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="308.5" y="131.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">produce (NodePort 9092)</text>
+<text x="308.5" y="131.5" font-size="11" fill="#555" text-anchor="middle">produce (NodePort 9092)</text>
+<path d="M480,245 L195,180" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="343.5" y="206.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">consume</text>
+<text x="343.5" y="206.5" font-size="11" fill="#555" text-anchor="middle">consume</text>
+<path d="M335,225 L600,210" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="473.5" y="211.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">writes shipment_prep</text>
+<text x="473.5" y="211.5" font-size="11" fill="#555" text-anchor="middle">writes shipment_prep</text>
+<path d="M195,270 L560,280" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="383.5" y="269.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">tool call decision</text>
+<text x="383.5" y="269.0" font-size="11" fill="#555" text-anchor="middle">tool call decision</text>
+<path d="M335,200 L935,180" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="641.0" y="184.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">OTLP traces, metrics, logs</text>
+<text x="641.0" y="184.0" font-size="11" fill="#b8650a" text-anchor="middle">OTLP traces, metrics, logs</text>
+<path d="M315,100 L660,175" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="493.5" y="131.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">assert (kubectl exec)</text>
+<text x="493.5" y="131.5" font-size="11" fill="#555" text-anchor="middle">assert (kubectl exec)</text>
+<path d="M550,100 L935,180" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="748.5" y="134.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">assert signals</text>
+<text x="748.5" y="134.0" font-size="11" fill="#555" text-anchor="middle">assert signals</text>
+<path d="M800,100 L195,180" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="503.5" y="134.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">disable, restore</text>
+<text x="503.5" y="134.0" font-size="11" fill="#555" text-anchor="middle">disable, restore</text>
+<text x="540" y="26" font-size="15" fill="#444444" text-anchor="middle" font-weight="700">Deploying a reused service onto the shared Kubernetes platform</text>
+<text x="540" y="505" font-size="11" fill="#555555" text-anchor="middle">Every host-facing check reaches a platform NodePort or uses kubectl exec; nothing forwards, tunnels or proxies.</text>
+</svg>

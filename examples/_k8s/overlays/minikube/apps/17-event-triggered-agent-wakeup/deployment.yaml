@@ -1,0 +1,95 @@
+# deployment.yaml - the event-triggered-agent-wakeup service (examples/17-event-triggered-agent-wakeup),
+# reused unchanged, deployed onto the shared platform to prove the cluster substrate end to end.
+# Same image, same application.properties, same Flyway migration as the compose example; only the
+# env values differ, read from the shared apa-app-config ConfigMap (base/config.yaml) instead of
+# compose.yaml's service-name DNS.
+#
+# Image: built and loaded by ../../../../load-images.sh as localhost/apa/17-event-triggered-agent-
+# wakeup:1.0.0 (never pulled; imagePullPolicy IfNotPresent only ever finds it in the node's local
+# image store). Namespace apa is labeled for namespace-wide Istio sidecar injection
+# (../../../../base/namespace.yaml) and carries the STRICT mTLS PeerAuthentication every pod in it
+# picks up automatically; nothing here opts in separately.
+#
+# WAKEUP_CONSUMER_ENABLED mirrors compose.yaml's env var of the same name (the demo code
+# PaymentWakeupRoute.configure reads via wakeup.consumer.enabled): the cluster's biting negative
+# witness flips it with `kubectl set env deployment/event-triggered-agent-wakeup -n apa
+# WAKEUP_CONSUMER_ENABLED=false`, which changes the pod template and triggers a new rollout on its
+# own, no separate `kubectl rollout restart` needed.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-triggered-agent-wakeup
+  namespace: apa
+  labels:
+    app.kubernetes.io/name: event-triggered-agent-wakeup
+    app.kubernetes.io/part-of: apa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: event-triggered-agent-wakeup
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: event-triggered-agent-wakeup
+        app.kubernetes.io/part-of: apa
+    spec:
+      containers:
+        - name: event-triggered-agent-wakeup
+          image: localhost/apa/17-event-triggered-agent-wakeup:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: apa-app-config
+          env:
+            - name: QUARKUS_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: apa-postgres-app
+                  key: username
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: apa-postgres-app
+                  key: password
+            - name: WAKEUP_CONSUMER_ENABLED
+              value: "true"
+          startupProbe:
+            httpGet:
+              path: /q/health/started
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 200m
+              memory: 384Mi
+            limits:
+              cpu: 1000m
+              memory: 768Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 185
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault

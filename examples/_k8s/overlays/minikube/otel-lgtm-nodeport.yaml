@@ -1,0 +1,45 @@
+# otel-lgtm-nodeport.yaml - the Service for the single otel-lgtm image
+# (../../setup-lgtm.sh owns the Deployment). One pod, many signals: this one
+# Service covers both in-cluster DNS (the `port` values below, matching the
+# container's own listening ports - see base/config.yaml's
+# QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT) and host access (the `nodePort`
+# values, published on 127.0.0.1 at profile creation - see
+# ../../lib/endpoints.sh and ../../README.md for the host-port map; the host
+# port a browser uses is NOT the same number as the in-cluster `port` for
+# Prometheus, since host 9090 is commonly taken by Cockpit on Fedora/RHEL).
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-lgtm
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: otel-lgtm
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: otel-lgtm
+  ports:
+    - name: grafana
+      port: 3000
+      targetPort: grafana
+      nodePort: 30300
+    - name: otlp-grpc
+      port: 4317
+      targetPort: otlp-grpc
+      nodePort: 30317
+    - name: otlp-http
+      port: 4318
+      targetPort: otlp-http
+      nodePort: 30318
+    - name: loki
+      port: 3100
+      targetPort: loki
+      nodePort: 30310
+    - name: tempo
+      port: 3200
+      targetPort: tempo
+      nodePort: 30320
+    - name: prometheus
+      port: 9090
+      targetPort: prometheus
+      nodePort: 30909

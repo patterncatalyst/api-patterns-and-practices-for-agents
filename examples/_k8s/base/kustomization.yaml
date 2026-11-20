@@ -1,0 +1,17 @@
+# kustomization.yaml - the platform's shared base: the apa namespace (with
+# its mesh opt-in label) and the env-contract ConfigMap.
+#
+# app-template.yaml is intentionally NOT listed here: it is a copy-paste
+# reference for the next wave's chapter apps (see its own header comment),
+# not a resource this platform applies on its own. No chapter app exists in
+# this wave.
+#
+# No `namespace:` transformer: every resource already carries its own
+# explicit metadata.namespace, matching overlays/minikube's convention
+# (which spans two namespaces and cannot use one transformer anyway).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - config.yaml

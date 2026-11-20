@@ -1,0 +1,116 @@
+# app-template.yaml - COPY-PASTE REFERENCE, not applied by this platform's
+# own kustomization (deliberately absent from kustomization.yaml's
+# resources). No chapter app exists yet; this is the reusable Deployment +
+# Service shape the next wave copies per chapter and adapts (its own image,
+# name, and probe set depending on whether the chapter's example ships
+# quarkus-smallrye-health).
+#
+# ClusterIP only: host access to a chapter app, once one exists, goes through
+# the SAME mesh and Service model a cluster user would see in production -
+# there is no host NodePort for app Services. (Platform pieces that DO need
+# host access - Grafana, Keycloak, Apicurio, Ollama, Kiali, Kafka's external
+# listener - are published from overlays/minikube and the operator CRs; see
+# the examples/_k8s/README.md endpoint map.)
+#
+# No explicit Istio label is needed: base/namespace.yaml labels the apa
+# namespace for namespace-wide sidecar injection, so every pod created here
+# is meshed automatically, and the namespace-wide STRICT PeerAuthentication
+# (setup-istio.sh) covers it too.
+#
+# The image below (the same UBI 10 runtime image every chapter's own
+# Containerfile publishes from) is a placeholder so this file renders as a
+# valid, fully-qualified-and-pinned manifest on its own; replace it with the
+# chapter's own built image (see ../load-images.sh).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-service
+  namespace: apa
+  labels:
+    app.kubernetes.io/name: example-service
+    app.kubernetes.io/part-of: apa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: example-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: example-service
+        app.kubernetes.io/part-of: apa
+    spec:
+      containers:
+        - name: example-service
+          image: registry.access.redhat.com/ubi10/openjdk-25-runtime:1.24-20
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: apa-app-config
+          env:
+            - name: QUARKUS_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: apa-postgres-app
+                  key: username
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: apa-postgres-app
+                  key: password
+          startupProbe:
+            httpGet:
+              path: /q/health/started
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 150m
+              memory: 320Mi
+            limits:
+              cpu: 750m
+              memory: 640Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 185
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: example-service
+  namespace: apa
+  labels:
+    app.kubernetes.io/name: example-service
+    app.kubernetes.io/part-of: apa
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: example-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
