@@ -10,21 +10,18 @@ assumed from documentation.
 
 | Span | Name (confirmed) | Attributes |
 |---|---|---|
-| AiService call | `<InterfaceSimpleName>.<methodName>`, here `OrderStatusAdvisor.answer` | none of its own; the chat and tool spans nested under it carry the `gen_ai.*` attributes below |
+| AiService call | `langchain4j.aiservices.<InterfaceSimpleName>.<methodName>`, here `langchain4j.aiservices.OrderStatusAdvisor.answer` | none of its own; the chat and tool spans nested under it carry the `gen_ai.*` attributes below |
 | Chat model call | `completion <model-id>` (the literal text constant is `completion`, independent of the `gen_ai.operation.name` attribute value, which is `chat`) | `gen_ai.operation.name=chat`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.request.temperature`, `gen_ai.request.top_p`, `gen_ai.response.id`, `gen_ai.response.model`, `gen_ai.response.finish_reasons`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens` |
 | Tool call | `langchain4j.tools.<toolName>`, here `langchain4j.tools.orderStatus` | `gen_ai.operation.name=execute_tool`, `gen_ai.tool.call.id`, `gen_ai.tool.name`, `gen_ai.tool.type`; `gen_ai.tool.call.arguments`/`gen_ai.tool.call.result` only when `quarkus.langchain4j.tracing.include-tool-arguments`/`-tool-result` are true, which this example never sets |
 
-### A naming assumption this chapter's checks do not repeat
+### Span names confirmed against the running service
 
-The AiService-level span is **not** prefixed `langchain4j.aiservices.` on 1.13.4: that string is
-real in the deployment processor, but it names the default Micrometer `@Timed`/`@Counted`
-annotation values (`langchain4j.aiservices.timed`, `langchain4j.aiservices.counted`), not the
-span. `SpanWrapper.wrap` calls `tracer.spanBuilder(spanInfo.name())` directly on the bare
-`<Interface>.<method>` string `AiServicesProcessor.defaultAiServiceSpanName` builds. `verify.sh`
-asserts the real name, `OrderStatusAdvisor.answer`, confirmed against the decompiled bytecode of
-`AiServiceMethodCreateInfo$SpanInfo` and `SpanWrapper`. The tool span's prefix,
-`langchain4j.tools.`, matched the expectation exactly (confirmed in `ToolSpanWrapper`'s own
-`StringConcatFactory` bootstrap constant).
+On 1.13.4 the AiService-level span is named `langchain4j.aiservices.<Interface>.<method>`
+(`langchain4j.aiservices.OrderStatusAdvisor.answer`) and the tool-call span
+`langchain4j.tools.<tool>` (`langchain4j.tools.orderStatus`). Both names were read back from Tempo
+for a real call to the running service, which is the authority `verify.sh` asserts against. The
+chat-model span's literal name is `completion <model-id>`, independent of its own
+`gen_ai.operation.name` attribute value, which is `chat`.
 
 ## Metrics (Prometheus, via the OTLP to LGTM path)
 

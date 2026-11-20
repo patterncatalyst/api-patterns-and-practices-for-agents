@@ -58,10 +58,9 @@ token_cost_row_for_real_model() {
 a_real_model_row_exists() { [[ "$(token_cost_row_for_real_model)" -gt 0 ]]; }
 row_count_grew_beyond() { [[ "$(token_cost_row_count)" -gt "$1" ]]; } # row_count_grew_beyond <baseline>
 
-# The AiService-level span quarkus-langchain4j names "<Interface>.<method>" and the tool-call
-# span it names "langchain4j.tools.<tool>" (confirmed against the resolved jar; the first is NOT
-# prefixed "langchain4j.aiservices.", a naming assumption this committed check deliberately does
-# not repeat). Both are searched by TraceQL against Tempo's HTTP API.
+# The AiService-level span quarkus-langchain4j names "langchain4j.aiservices.<Interface>.<method>"
+# and the tool-call span it names "langchain4j.tools.<tool>" (confirmed live against Tempo for the
+# running service). Both are searched by TraceQL against Tempo's HTTP API.
 tempo_has_span() { # tempo_has_span <TraceQL span name>
     curl -sf -G "http://localhost:3200/api/search" --data-urlencode "q={resource.service.name=\"$SVC\" && name=\"$1\"}" \
         | grep '"traceID"' >/dev/null
@@ -97,8 +96,8 @@ done
 check "the agent answers a real order-status question (one real model call)" ask_order O-3301
 check "the real model call leaves a token_cost row for the pinned model (observed in PostgreSQL, not model prose)" \
     poll 120 a_real_model_row_exists
-check "Tempo has the AiService-level span OrderStatusAdvisor.answer for $SVC" \
-    poll 90 tempo_has_span "OrderStatusAdvisor.answer"
+check "Tempo has the AiService-level span langchain4j.aiservices.OrderStatusAdvisor.answer for $SVC" \
+    poll 90 tempo_has_span "langchain4j.aiservices.OrderStatusAdvisor.answer"
 check "Tempo has the tool-call span langchain4j.tools.orderStatus for $SVC" \
     poll 90 tempo_has_span "langchain4j.tools.orderStatus"
 check "Prometheus has a nonzero gen_ai_client_token_usage_total for $SVC" \
