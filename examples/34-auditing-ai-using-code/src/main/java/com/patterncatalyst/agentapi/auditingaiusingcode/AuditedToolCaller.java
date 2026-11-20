@@ -1,5 +1,6 @@
 package com.patterncatalyst.agentapi.auditingaiusingcode;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
@@ -49,6 +50,9 @@ public class AuditedToolCaller {
     @Inject
     ProducerTemplate producerTemplate;
 
+    @Inject
+    ObjectMapper objectMapper;
+
     @ConfigProperty(name = "outbound.mcp.target-url")
     String targetUrl;
 
@@ -96,7 +100,7 @@ public class AuditedToolCaller {
             ToolExecutionRequest request = ToolExecutionRequest.builder()
                     .id("audited-" + orderId)
                     .name(TARGET)
-                    .arguments("{\"orderId\":\"" + orderId + "\"}")
+                    .arguments(objectMapper.createObjectNode().put("orderId", orderId).toString())
                     .build();
             ToolExecutionResult result = client.executeTool(request);
             return result.resultText();

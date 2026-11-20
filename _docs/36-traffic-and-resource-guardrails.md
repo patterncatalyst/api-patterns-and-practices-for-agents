@@ -29,7 +29,7 @@ An endpoint that accepts every call at whatever rate it arrives, and parses what
 
 **An ingest endpoint caps its call rate with a framework-enforced interceptor that runs before the method body, and validates every accepted call's payload against a registered schema before any domain logic ever sees it, so both guardrails reject at the door rather than partway through.**
 
-### How Quarkus models it
+### How Quarkus and Camel model it
 
 The rate limit is one annotation from `quarkus-smallrye-fault-tolerance`, a SmallRye addition beyond the MicroProfile Fault Tolerance specification:
 
@@ -54,20 +54,24 @@ public RestResponse<RateLimitProblem> mapRateLimited(RateLimitException e) {
 }
 ```
 
-A call that clears the rate limit is parsed and checked against a schema loaded once at startup from a committed, draft-07 JSON Schema file, using `com.networknt:json-schema-validator`:
+A call that clears the rate limit is routed through one Camel route, `direct:validate-ingest`, which checks the raw body against a committed, draft-07 JSON Schema file with the Camel JSON Schema Validator component, an extension this book's Camel Quarkus platform BOM already manages, with no version pin of its own:
 
 ```java
-public List<String> validate(JsonNode payload) {
-    if (!enabled) {
-        return List.of();
+public class IngestSchemaValidationRoute extends RouteBuilder {
+
+    @ConfigProperty(name = "ingest.schema.path")
+    String schemaPath;
+
+    @Override
+    public void configure() {
+        from("direct:validate-ingest")
+                .routeId("validate-ingest")
+                .to("json-validator:file:" + schemaPath);
     }
-    return schema.validate(payload).stream()
-            .map(violation -> violation.getInstanceLocation() + ": " + violation.getMessage())
-            .toList();
 }
 ```
 
-A non-empty violation list throws before an `IngestOrder` is ever constructed, and the same exception-mapping discipline turns it into a 400. Both rejection paths call the same recorder, so a rejection for either reason leaves a durable row and increments a Micrometer counter tagged by reason, not only a transient status code a client happened to see once.
+`IngestResource` calls the route through an injected `ProducerTemplate`. A payload that fails the schema throws `org.apache.camel.component.jsonvalidator.JsonValidationException`, wrapped the way every failed `ProducerTemplate` call wraps its cause; unwrapping it and turning each validation error into a violation string throws before an `IngestOrder` is ever constructed, and the same exception-mapping discipline turns it into a 400. The component validates against the schema using NetworkNT JSON Schema internally, but that dependency never appears in this project's own dependency declarations: the platform BOM resolves its version, so adopting the component removed a standalone third-party pin rather than adding one. Both rejection paths call the same recorder, so a rejection for either reason leaves a durable row and increments a Micrometer counter tagged by reason, not only a transient status code a client happened to see once.
 
 > **🤖 Explore with your agent**
 > **Intent (stack-neutral):** an ingest endpoint must cap how often it can be called and reject a payload that fails a published schema, both before any domain logic runs, and both rejections must leave a record a caller cannot erase by retrying.
@@ -98,7 +102,7 @@ Try:
 
 ## When not to use it
 
-An internal endpoint called only by a small, trusted set of services behind its own network boundary, with a shape already enforced by a shared client library, gains little from an application-level rate limit and schema gate: the cost of the extra interceptor and the extra validation pass buys protection against a caller that structurally cannot misbehave. Reach for both guardrails on any endpoint an agent, a script, or an external party can call directly, where neither the caller's good behavior nor its payload's shape is ever guaranteed.
+An internal endpoint called only by a small, trusted set of services behind its own network boundary, with a shape already enforced by a shared client library, gains little from an application-level rate limit and schema gate: the cost of the extra interceptor and the extra validation pass buys little protection against a caller that structurally cannot misbehave. Reach for both guardrails on any endpoint an agent, a script, or an external party can call directly, where neither the caller's good behavior nor its payload's shape is ever guaranteed.
 
 ## References
 

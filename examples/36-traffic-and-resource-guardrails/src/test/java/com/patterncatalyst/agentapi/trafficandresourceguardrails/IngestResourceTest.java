@@ -11,7 +11,8 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 /**
- * Exercises guardrail 2 alone: a valid payload is accepted, an invalid one is rejected with a
+ * Exercises guardrail 2 alone, routed live through {@code direct:validate-ingest} and the Camel
+ * JSON Schema Validator component: a valid payload is accepted, an invalid one is rejected with a
  * {@code 400} {@code application/problem+json} body naming its violations and leaves a durable
  * {@code schema_invalid} row behind. Stays well under the rate limit's 5-per-30-second window (two
  * calls), so {@link RateLimitBurstTest} owns the burst assertion in its own, isolated test profile.

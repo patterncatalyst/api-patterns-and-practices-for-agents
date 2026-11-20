@@ -4,15 +4,18 @@ A single-service example: one agent-facing ingest endpoint, `POST /ingest/orders
 guardrails in one app. `@RateLimit` (`io.smallrye.faulttolerance.api`, a SmallRye Fault Tolerance
 addition beyond the MicroProfile Fault Tolerance spec) caps the endpoint at 5 calls per 30-second
 window; a caller over the limit never reaches the method body at all, since the annotation is a CDI
-interceptor that runs first. A call that clears the rate limit is then checked by
-`IngestSchemaValidator` against the committed, draft-07 `contracts/36-ingest.schema.json`; only a
-payload that clears both guardrails is accepted. Both guardrails' rejections throw an exception a
-global `@ServerExceptionMapper` (`GuardrailExceptionMappers`) maps to a distinct RFC 9457
+interceptor that runs first. A call that clears the rate limit is then routed through one Camel
+route, `direct:validate-ingest` (`IngestSchemaValidationRoute`), to the Camel JSON Schema Validator
+component against the committed, draft-07 `contracts/36-ingest.schema.json`; only a payload that
+clears both guardrails is accepted. Both guardrails' rejections throw an exception a global
+`@ServerExceptionMapper` (`GuardrailExceptionMappers`) maps to a distinct RFC 9457
 `application/problem+json` body, and both record a durable `trafficguardrails.rejections` row plus
 a tagged `ingest.rejected` Micrometer counter through the same `RejectionRecorder`.
 
-No Camel route and no Kafka topic in this example: an ingest gate's whole job is deciding whether a
-call is even let in, before there is anything to route.
+No Kafka topic in this example: an ingest gate's whole job is deciding whether a call is even let
+in, before there is anything to route downstream. The one Camel route this example does carry
+exists only to front the schema-validity guardrail with a platform-managed component instead of a
+standalone third-party library.
 
 ## The two guardrails
 
@@ -23,20 +26,26 @@ call to the annotated method counts, valid payload or not. An over-limit call th
 `io.smallrye.faulttolerance.api.RateLimitException`, which by default surfaces as a bare HTTP 500;
 `GuardrailExceptionMappers.mapRateLimited` maps it to a `429` `RateLimitProblem` instead.
 
-**Schema-validity ingest gate.** `IngestSchemaValidator` loads `contracts/36-ingest.schema.json`
-(bind-mounted read-only into the container; a relative path in dev and test) at startup with
-`com.networknt:json-schema-validator`, held at 2.0.8 (the newest release whose public API still
-carries `com.fasterxml.jackson.databind.JsonNode`; 3.0.0 and later moved to Jackson 3's
-`tools.jackson.databind.JsonNode`, incompatible with the Jackson 2.21.8 `quarkus-bom:3.40.1.2`
-manages, confirmed by decompiling both jars). A payload that fails validation never reaches
-`IngestOrder` construction; `GuardrailExceptionMappers.mapSchemaViolation` maps the resulting
-`SchemaViolationException` to a `400` `ValidationProblem` naming every violation.
+**Schema-validity ingest gate.** `IngestSchemaValidationRoute`, a one-route `RouteBuilder`, exposes
+`direct:validate-ingest`, routing the raw body to `json-validator:file:<path>`
+(`camel-quarkus-json-validator`, platform-managed by the Camel Quarkus platform BOM, no version pin
+of its own) against `contracts/36-ingest.schema.json` (bind-mounted read-only into the container; a
+relative path in dev and test). `IngestResource` calls the route through an injected
+`ProducerTemplate`; a payload that fails validation throws
+`org.apache.camel.component.jsonvalidator.JsonValidationException`, wrapped in a
+`CamelExecutionException`. `IngestResource` unwraps the cause, turns each
+`com.networknt.schema.Error` into a `"<instance location>: <message>"` string, and throws the same
+`SchemaViolationException` `GuardrailExceptionMappers.mapSchemaViolation` maps to a `400`
+`ValidationProblem` naming every violation. The component uses NetworkNT JSON Schema internally
+(confirmed by `mvn dependency:tree`: `camel-quarkus-json-validator:3.40.0` to
+`camel-json-validator:4.22.2` to `json-schema-validator:2.0.7`), but that dependency's version is
+resolved by the platform BOM, not pinned by this project.
 
 ## The two negative witnesses
 
-- `SCHEMA_GATE_ENABLED=false` (compose environment, `schema.gate.enabled`) makes
-  `IngestSchemaValidator.validate` return no violations unconditionally: an invalid payload is
-  accepted instead of rejected.
+- `SCHEMA_GATE_ENABLED=false` (compose environment, `schema.gate.enabled`) makes `IngestResource`
+  skip the `direct:validate-ingest` call entirely: an invalid payload is accepted instead of
+  rejected.
 - `RATE_LIMIT_VALUE_OVERRIDE` / `RATE_LIMIT_WINDOW_OVERRIDE` (compose environment, mapped to
   `quarkus.fault-tolerance.global.rate-limit.value` / `.window`, SmallRye Fault Tolerance's own
   runtime override mechanism for annotation members) raise the effective limit far above what a
@@ -67,9 +76,10 @@ mvn -B verify
 
 `mvn -B verify` (Dev Services, no compose): `IngestResourceTest` posts a valid payload (`202`) and
 an invalid one (`400` problem+json naming its violations, with a new `trafficguardrails.rejections`
-row). `RateLimitBurstTest` runs in its own `QuarkusTestProfile` (a freshly booted application, so
-the rate-limit singleton starts at zero), overriding the limit to 3 calls per 30 seconds: 3 valid
-calls succeed, the 4th is a `429` problem+json, and both the durable row count and the
+row), each call routed live through `direct:validate-ingest` and the Camel JSON Schema Validator
+component. `RateLimitBurstTest` runs in its own `QuarkusTestProfile` (a freshly booted
+application, so the rate-limit singleton starts at zero), overriding the limit to 3 calls per 30
+seconds: 3 valid calls succeed, the 4th is a `429` problem+json, and both the durable row count and the
 `ingest.rejected{reason="rate_limit"}` Micrometer counter grow.
 
 `verify.sh` adds the live view: a burst of 6 calls against the real 5-per-30-second limit, the 6th
@@ -124,7 +134,7 @@ broker-side, byte-budget counterpart to this chapter's application-level call-co
 | Path | Purpose |
 |------|---------|
 | `src/main/java/.../IngestResource.java` | the trigger: `POST /ingest/orders`, `@RateLimit`, the schema-gate call |
-| `src/main/java/.../IngestSchemaValidator.java` | guardrail 2: validates against the committed draft-07 schema |
+| `src/main/java/.../IngestSchemaValidationRoute.java` | guardrail 2: one route, `direct:validate-ingest`, to the Camel JSON Schema Validator component against the committed draft-07 schema |
 | `src/main/java/.../GuardrailExceptionMappers.java` | maps both guardrails' exceptions to problem+json and records the rejection |
 | `src/main/java/.../RejectionRecorder.java` | the durable row, the Micrometer counter, the log line |
 | `src/main/java/.../RateLimitProblem.java`, `ValidationProblem.java` | the two problem+json shapes |

@@ -15,18 +15,31 @@
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.version>3.40.1.2</quarkus.platform.version>
+    <!-- Camel 4.22.2 (LTS patch) ahead of the platform's managed version; see _plans/versions.md -->
+    <camel.version>4.22.2</camel.version>
     <compiler-plugin.version>3.16.0</compiler-plugin.version>
     <surefire-plugin.version>3.6.1</surefire-plugin.version>
-    <!-- Not platform-managed: see _plans/versions.md for the survey (held at the 2.0.x line;
-         3.0.0+ requires Jackson 3). -->
-    <json-schema-validator.version>2.0.8</json-schema-validator.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-bom</artifactId>
+        <version>${camel.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>${quarkus.platform.artifact-id}</artifactId>
+        <version>${quarkus.platform.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>${quarkus.platform.group-id}</groupId>
+        <artifactId>quarkus-camel-bom</artifactId>
         <version>${quarkus.platform.version}</version>
         <type>pom</type>
         <scope>import</scope>
@@ -41,8 +54,9 @@
       <version>1.0.0</version>
     </dependency>
 
-    <!-- The agent-facing ingest surface: a plain Quarkus REST resource, no Camel anywhere in
-         this example. -->
+    <!-- The agent-facing ingest surface: a plain Quarkus REST resource. The ingest endpoint stays
+         JAX-RS; only the schema-validity guardrail routes through Camel (direct:validate-ingest,
+         see IngestSchemaValidationRoute). -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-rest</artifactId>
@@ -61,15 +75,19 @@
       <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
     </dependency>
 
-    <!-- Guardrail 2: validates the ingest payload in-app against the committed, draft-07 JSON
-         Schema (contracts/36-ingest.schema.json). Not platform-managed; held at 2.0.8 (the newest
-         release still on com.fasterxml.jackson.databind.JsonNode; 3.0.0+ moved to Jackson 3's
-         tools.jackson.databind.JsonNode, incompatible with the Jackson 2.21.8 this platform BOM
-         manages). See _plans/versions.md. -->
+    <!-- Guardrail 2: a one-route RouteBuilder (IngestSchemaValidationRoute) exposes
+         direct:validate-ingest, routing the raw body to the Camel JSON Schema Validator
+         component against the committed, draft-07 contracts/36-ingest.schema.json. No separate
+         version pin: platform-managed by quarkus-camel-bom (see _plans/versions.md). The
+         component uses NetworkNT internally, but that dependency's version is resolved by the
+         platform BOM, not pinned here. -->
     <dependency>
-      <groupId>com.networknt</groupId>
-      <artifactId>json-schema-validator</artifactId>
-      <version>${json-schema-validator.version}</version>
+      <groupId>org.apache.camel.quarkus</groupId>
+      <artifactId>camel-quarkus-direct</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel.quarkus</groupId>
+      <artifactId>camel-quarkus-json-validator</artifactId>
     </dependency>
 
     <dependency>

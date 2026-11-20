@@ -75,7 +75,7 @@ Try:
 
 - Disable the audit interceptor and watch the business result still update while the audit count holds steady.
 - Read the committed JSON Schema for one audit record and compare it against a folded row's own shape.
-- Call the chokepoint for an order ch13 has never seeded and watch the call itself fail before any record is needed.
+- Call the chokepoint for an order the remote service has never seeded and watch the call itself fail before any record is needed.
 
 ## Anti-patterns
 
