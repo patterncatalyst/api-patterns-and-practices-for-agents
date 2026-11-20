@@ -7,7 +7,13 @@ output: false
 
 # r13 Implementation Plan: the appendices (A, C, D, E, F) + G (structured outputs)
 
-Status: DRAFT, pending owner approval. Part 8 appendices, all except B (OpenShift Local, deferred to r14). All house gates apply. Appendices are spine-exempt (`validate.py check_chapter_spine` skips `a*-*.md`) and already xref-exempt (the xref check skips `a*-*.md`), but every other house rule holds: front matter, no em/en dashes, no host ids, voice, idiomatic, evidence in `_plans/claims.md`, sources credited in `bibliography.md`.
+Status: APPROVED with decisions (owner 2026-11-20). Part 8 appendices, all except B (OpenShift Local, deferred to r14).
+
+**LOCKED DECISIONS (owner 2026-11-20):**
+1. **SPLIT r13a / r13b.** r13a = A, C, D, E (reference appendices, no new deps); ship as a clean checkpoint. r13b = F, G (runnable appendices).
+2. **Appendix F engine = Drools DRL rules as a plain library** (`kie-api` / `drools-*`, DRL rules invoked from a CDI bean), NOT Kogito and NOT DMN. Chosen for no Quarkus-version coupling (the library has no Quarkus extension to lag the LTS). Survey the latest stable Drools at G0 and pin it in versions.md with a reason.
+3. **Appendix G** ships in r13 (r13b) as the new structured-outputs appendix, scope synthesis + runnable demo.
+4. Appendix filenames: A=`aa-`, C=`ac-`, D=`ad-`, E=`ae-`, F=`af-`, G=`ag-` (B=`ab-` reserved for r14). All house gates apply. Appendices are spine-exempt (`validate.py check_chapter_spine` skips `a*-*.md`) and already xref-exempt (the xref check skips `a*-*.md`), but every other house rule holds: front matter, no em/en dashes, no host ids, voice, idiomatic, evidence in `_plans/claims.md`, sources credited in `bibliography.md`.
 
 ## Scope
 
@@ -49,7 +55,7 @@ Rationale: mirrors the r12a/r12b split. The reference appendices are independent
 
 ### F Deterministic decisioning behind an agent tool (`_docs/af-deterministic-decisioning.md` + `examples/af-deterministic-decisioning/`)
 - Reimplements the refund-approval decision (ch26's hand-rolled JSON-rule evaluator) as a rules/DMN engine behind an MCP tool: the concrete answer to the Prompt-as-Business-Logic anti-pattern and the Model-Reasons / Application-Controls principle. The model proposes; the engine decides deterministically; the tool returns the verdict with the failed clause.
-- **New dependency (G0 survey required):** a rules/DMN engine. RECOMMENDED: Kogito on Quarkus with a DMN decision model (`kogito-quarkus-decisions`, the Quarkus-native evolution of Drools, business-readable DMN pairs with "commit the rule as a model, not code"). FALLBACK if Kogito does not support Quarkus 3.40.1.2 at G0: the Drools rules engine as a plain library (`kie-api` / `drools-*`, DRL rules) invoked from a CDI bean, which has no Quarkus-version coupling. Survey both upstream at G0, pin the latest stable that is compatible, record the choice and reason in `_plans/versions.md`.
+- **New dependency (LOCKED: Drools DRL library):** the Drools rules engine as a plain library (`kie-api` / `drools-core` / `drools-compiler` or the current equivalent), DRL rules invoked from a CDI bean. No Quarkus extension, so no Quarkus-version coupling. Survey the latest stable Drools upstream at G0, pin it in `_plans/versions.md` with a reason, and confirm it resolves and runs on JDK 25. The refund-approval decision is authored as a `.drl` ruleset loaded into a `KieContainer`; the MCP tool fires the rules and returns the verdict with the failed clause.
 - Runnable: `verify.sh` asserts the same observable effect as ch26 (durable verdict row, approve/reject outcomes, the failed clause on rejection) and a negative witness (weaken a rule clause, the previously-rejected proposal is now approved). `mvn -B verify` with a fixture lane so CI needs no model. Reuses the shipping-domain refund entities.
 
 ### G Structured outputs: typed, consistent agent I/O (`_docs/ag-structured-outputs.md` + `examples/ag-structured-outputs/`)
