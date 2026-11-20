@@ -1,0 +1,92 @@
+# shipping-track-deployment.yaml - the shipping data product's read port:
+# examples/14-domain-split-progressive-discovery, reused unchanged, its "shipping" named MCP
+# server at /mcp/shipping (the "order" named server at /mcp/order is also served by this same
+# image; the product exposes only the shipping one on its NodePort, since order-history lookups
+# belong to the orders product).
+#
+# Shares the "shipping" database with the shipping-writer product (examples/17-event-triggered-
+# agent-wakeup, see shipping-writer-jdbc-patch.yaml): this app's default-schema is "orders" (its
+# own orders.orders table plus shipping.shipments), the writer's default-schema is "shipping" (its
+# own shipping.shipment_prep table), so their Flyway histories land in different schemas and never
+# collide.
+#
+# Image: built and loaded by ../../../../load-images.sh as
+# localhost/apa/14-domain-split-progressive-discovery:1.0.0, never pulled.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shipping-track
+  namespace: apa
+  labels:
+    app.kubernetes.io/name: shipping-track
+    app.kubernetes.io/part-of: apa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: shipping-track
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: shipping-track
+        app.kubernetes.io/part-of: apa
+    spec:
+      containers:
+        - name: shipping-track
+          image: localhost/apa/14-domain-split-progressive-discovery:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: apa-app-config
+          env:
+            - name: QUARKUS_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: apa-postgres-app
+                  key: username
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: apa-postgres-app
+                  key: password
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: "jdbc:postgresql://apa-postgres-rw.apa-data.svc.cluster.local:5432/shipping"
+          startupProbe:
+            httpGet:
+              path: /q/health/started
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 150m
+              memory: 256Mi
+            limits:
+              cpu: 750m
+              memory: 512Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 185
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault

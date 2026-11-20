@@ -13,3 +13,8 @@ chapters ship:
 This directory is empty in r01. A CI drift gate (comparing the committed
 contract to what the running example actually serves) is added when the
 first contract lands, alongside the chapter that introduces it.
+
+- **`38-data-mesh-catalog.md`**: the final project's per-product descriptor
+  (domain owner, output ports, database, Kafka topics, governance rule,
+  NodePort) for the three data products, standing in for the discovery
+  catalog a data mesh needs (OpenMetadata is deferred).

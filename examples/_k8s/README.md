@@ -79,10 +79,16 @@ prints the live status of every row below.
 | Keycloak | 8180 | 30818 | `setup-keycloak.sh` + `overlays/minikube` |
 | Ollama | 11434 | 31143 | `setup-ollama.sh` + `overlays/minikube` |
 | Kiali | 20001 | 30201 | `setup-kiali.sh` (kiali-operator CR) |
+| Orders (final project) | 8088 | 30388 | `overlays/minikube/apps/38-data-mesh` |
+| Payments (final project) | 8089 | 30389 | `overlays/minikube/apps/38-data-mesh` |
+| Shipping read (final project) | 8090 | 30390 | `overlays/minikube/apps/38-data-mesh` |
 
 Host ports match the pins in the book's root `CLAUDE.md` and
 `examples/_infra/compose.yaml`; Kiali's host port (20001) is new for the
-platform and does not collide with anything else in that list.
+platform and does not collide with anything else in that list. The three
+final-project rows are the only chapter-app NodePorts on the platform: every
+other chapter app stays ClusterIP (see `base/app-template.yaml`), published
+only when it is one of the final project's own agent-facing data products.
 
 A Service's in-cluster `port` is the container's own listening port (for
 example Keycloak answers in-cluster on 8080, not its host port 8180); the

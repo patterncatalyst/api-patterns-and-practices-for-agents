@@ -1,8 +1,8 @@
-# service.yaml - ClusterIP only, matching ../../../../base/app-template.yaml's convention: host
-# access to a chapter app goes through the same mesh and Service model a cluster user would see,
-# never a NodePort. The setup chapter's verify.sh reaches the platform's own NodePorts (Kafka,
-# PostgreSQL, Grafana) instead of this app directly; the Service exists for in-cluster callers and
-# for `kubectl exec` from a debug pod, never from the host.
+# service.yaml - ClusterIP, matching ../../../../base/app-template.yaml's default convention: this
+# service has no host-facing tool surface of its own (it reacts to a Kafka event, not a host
+# caller), so it stays in-cluster. The setup chapter's verify.sh reaches the platform's own
+# NodePorts (Kafka, PostgreSQL, Grafana) instead of this app directly; the Service exists for
+# in-cluster callers and for `kubectl exec` from a debug pod, never from the host.
 apiVersion: v1
 kind: Service
 metadata:

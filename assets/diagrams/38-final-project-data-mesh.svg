@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 460" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="12" width="1160" height="78" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="32" font-size="12" font-weight="700" fill="#888">Host 127.0.0.1 (verify.sh / an agent caller): NodePorts only, no forwarding</text>
+<rect x="20" y="104" width="760" height="250" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="124" font-size="12" font-weight="700" fill="#888">apa namespace: 3 data products, 5 Deployments</text>
+<rect x="796" y="104" width="384" height="250" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="808" y="124" font-size="12" font-weight="700" fill="#888">apa-data namespace: per-product databases, Kafka, Apicurio</text>
+<rect x="40" y="45" width="190" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="135.0" y="70.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">curl /mcp</text>
+<text x="135.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">orders, NodePort 8088</text>
+<rect x="250" y="45" width="190" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="345.0" y="70.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">curl /mcp</text>
+<text x="345.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">payments facade, NodePort 8089</text>
+<rect x="460" y="45" width="230" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="575.0" y="70.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">kcat -P</text>
+<text x="575.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">apa.payments.processed, NodePort 9092</text>
+<rect x="710" y="45" width="220" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="820.0" y="70.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">curl /mcp/shipping</text>
+<text x="820.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">shipping-track, NodePort 8090</text>
+<rect x="950" y="45" width="210" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="1055.0" y="70.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">curl registry/v3</text>
+<text x="1055.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">Apicurio, NodePort 8081</text>
+<rect x="40" y="150" width="190" height="70" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="135.0" y="183.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">orders</text>
+<text x="135.0" y="200.0" font-size="11.5" fill="#555555" text-anchor="middle">read-only, orders database</text>
+<rect x="250" y="150" width="190" height="70" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="345.0" y="183.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">payments-facade</text>
+<text x="345.0" y="200.0" font-size="11.5" fill="#555555" text-anchor="middle">MCP facade, no database</text>
+<rect x="250" y="250" width="190" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="345.0" y="283.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">payment-service</text>
+<text x="345.0" y="300.0" font-size="11.5" fill="#555555" text-anchor="middle">gRPC 9000, payments database</text>
+<rect x="460" y="150" width="190" height="70" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="555.0" y="183.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">shipping-track</text>
+<text x="555.0" y="200.0" font-size="11.5" fill="#555555" text-anchor="middle">/mcp/shipping, shipping database</text>
+<rect x="460" y="250" width="190" height="70" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="555.0" y="283.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">shipping-writer</text>
+<text x="555.0" y="300.0" font-size="11.5" fill="#555555" text-anchor="middle">Kafka-woken, shipping database</text>
+<rect x="816" y="150" width="170" height="65" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="901.0" y="180.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Kafka (Strimzi)</text>
+<text x="901.0" y="197.5" font-size="11.5" fill="#555555" text-anchor="middle">apa-kafka-bootstrap:9092</text>
+<rect x="816" y="235" width="170" height="90" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="901.0" y="278.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">CloudNativePG</text>
+<text x="901.0" y="295.0" font-size="11.5" fill="#555555" text-anchor="middle">orders / payments / shipping databases</text>
+<rect x="1000" y="150" width="160" height="65" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="1080.0" y="180.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Apicurio</text>
+<text x="1080.0" y="197.5" font-size="11.5" fill="#555555" text-anchor="middle">BACKWARD per artifact</text>
+<rect x="40" y="392" width="1140" height="48" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="610.0" y="421.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Federated computational governance: Apicurio BACKWARD gate, Keycloak mcp:tools:write scope, AuditAgentAction/OutboundCallAudit replay</text>
+<path d="M135,100 L135,150" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="141.0" y="119.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">NodePort 8088</text>
+<text x="141.0" y="119.0" font-size="11" fill="#555" text-anchor="middle">NodePort 8088</text>
+<path d="M135,220 L816,260" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="481.5" y="234.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">reads orders db</text>
+<text x="481.5" y="234.0" font-size="11" fill="#555" text-anchor="middle">reads orders db</text>
+<path d="M345,100 L345,150" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="351.0" y="119.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">NodePort 8089</text>
+<text x="351.0" y="119.0" font-size="11" fill="#555" text-anchor="middle">NodePort 8089</text>
+<path d="M345,220 L345,250" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="351.0" y="229.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">gRPC 9000</text>
+<text x="351.0" y="229.0" font-size="11" fill="#555" text-anchor="middle">gRPC 9000</text>
+<path d="M440,285 L816,290" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="634.0" y="281.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">writes payments db</text>
+<text x="634.0" y="281.5" font-size="11" fill="#555" text-anchor="middle">writes payments db</text>
+<path d="M575,100 L901,150" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="744.0" y="119.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">produce (NodePort 9092)</text>
+<text x="744.0" y="119.0" font-size="11" fill="#b8650a" text-anchor="middle">produce (NodePort 9092)</text>
+<path d="M901,215 L555,250" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="734.0" y="226.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">consume</text>
+<text x="734.0" y="226.5" font-size="11" fill="#555" text-anchor="middle">consume</text>
+<path d="M555,320 L816,310" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="691.5" y="309.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">writes shipment_prep</text>
+<text x="691.5" y="309.0" font-size="11" fill="#555" text-anchor="middle">writes shipment_prep</text>
+<path d="M820,100 L555,150" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="693.5" y="119.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">NodePort 8090</text>
+<text x="693.5" y="119.0" font-size="11" fill="#555" text-anchor="middle">NodePort 8090</text>
+<path d="M555,220 L900,235" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="733.5" y="221.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">reads shipping db</text>
+<text x="733.5" y="221.5" font-size="11" fill="#555" text-anchor="middle">reads shipping db</text>
+<path d="M1055,100 L1080,150" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="1073.5" y="119.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">NodePort 8081</text>
+<text x="1073.5" y="119.0" font-size="11" fill="#b8650a" text-anchor="middle">NodePort 8081</text>
+<text x="600" y="26" font-size="15" fill="#444444" text-anchor="middle" font-weight="700">The final project: a focused multi-domain data mesh</text>
+<text x="600" y="450" font-size="11" fill="#555555" text-anchor="middle">Three independently owned products, one shared platform, one governance plane; every host check goes through a NodePort.</text>
+</svg>

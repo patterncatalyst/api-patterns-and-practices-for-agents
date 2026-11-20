@@ -17,8 +17,10 @@
 # (observability, apa-data), so every resource carries its own explicit
 # metadata.namespace instead.
 #
-# Apps stay ClusterIP (see ../../base/app-template.yaml) and are never
-# published here, matching the no-forwarding, NodePorts-only house rule.
+# Apps are ClusterIP by default (see ../../base/app-template.yaml) and are not published here: a
+# platform-level NodePort lives alongside the component it belongs to. A chapter app that needs
+# host access publishes its own NodePort Service in its own overlay instead (see
+# apps/38-data-mesh/), never a forward, tunnel or proxy.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 

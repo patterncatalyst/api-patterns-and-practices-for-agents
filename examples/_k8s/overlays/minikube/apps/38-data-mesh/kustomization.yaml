@@ -1,0 +1,31 @@
+# kustomization.yaml - the final project's mesh: 5 Deployments across 3 data products, applied
+# and deleted together, deliberately NOT layered on ../../../../base (the shared namespace and
+# apa-app-config ConfigMap already exist once examples/_k8s/bootstrap.sh has run; re-including them
+# here would make `kubectl delete -k .` tear down the namespace and ch37's own app alongside this
+# layer). examples/38-*/verify.sh targets this kustomization directly for its fresh deploy.
+#
+# The shipping-writer product reuses ../17-event-triggered-agent-wakeup's own Deployment and
+# Service UNCHANGED as a kustomize resource (same files, same name, same image); the patch below
+# is the only mesh-specific change, pointing its datasource at the "shipping" database the shipping
+# data product owns instead of the shared "apa" database ch37 uses. Re-forking those two files
+# instead of patching them would drift a second copy of the same service for no behavioral reason.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - orders-deployment.yaml
+  - orders-service.yaml
+  - payments-facade-deployment.yaml
+  - payments-facade-service.yaml
+  - payment-service-deployment.yaml
+  - payment-service-service.yaml
+  - shipping-track-deployment.yaml
+  - shipping-track-service.yaml
+  - ../17-event-triggered-agent-wakeup
+
+patches:
+  - path: shipping-writer-jdbc-patch.yaml
+    target:
+      kind: Deployment
+      name: event-triggered-agent-wakeup
+      namespace: apa

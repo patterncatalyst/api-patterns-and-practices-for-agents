@@ -43,7 +43,15 @@ TP_KEYCLOAK=8180;    NP_KEYCLOAK=30818
 TP_OLLAMA=11434;     NP_OLLAMA=31143
 TP_KIALI=20001;      NP_KIALI=30201
 
-ENDPOINT_NAMES=(grafana otlp-grpc otlp-http loki tempo prometheus kafka postgres apicurio keycloak ollama kiali)
+# Data-mesh product NodePorts (the final project, ch38): the three host-facing product
+# surfaces (orders read port, payments facade, shipping read port). The fourth and fifth
+# mesh deployments (payment-service's gRPC backend, the shipping event-writer) stay
+# ClusterIP: neither has a host-facing tool surface, so neither gets a row here.
+TP_ORDERS=8088;        NP_ORDERS=30388
+TP_PAYMENTS=8089;      NP_PAYMENTS=30389
+TP_SHIPPING_TRACK=8090; NP_SHIPPING_TRACK=30390
+
+ENDPOINT_NAMES=(grafana otlp-grpc otlp-http loki tempo prometheus kafka postgres apicurio keycloak ollama kiali orders payments shipping-track)
 
 # name -> "hostPort nodePort namespace service label [path]"
 # (service/namespace used for a live Service check; path is display-only)
@@ -64,6 +72,11 @@ _endpoint_row() {
         ollama)     echo "$TP_OLLAMA $NP_OLLAMA $EP_DATA_NS ollama Ollama /api/tags" ;;
         # The kiali-operator CR ("kiali", kind Kiali) renders the Service.
         kiali)      echo "$TP_KIALI $NP_KIALI $EP_ISTIO_NS kiali Kiali /kiali" ;;
+        # Data-mesh products (ch38): Services defined in
+        # overlays/minikube/apps/38-data-mesh/*-service.yaml, namespace apa.
+        orders)         echo "$TP_ORDERS $NP_ORDERS apa orders Orders /mcp" ;;
+        payments)       echo "$TP_PAYMENTS $NP_PAYMENTS apa payments-facade Payments /mcp" ;;
+        shipping-track) echo "$TP_SHIPPING_TRACK $NP_SHIPPING_TRACK apa shipping-track Shipping /mcp/shipping" ;;
         *) return 1 ;;
     esac
 }
