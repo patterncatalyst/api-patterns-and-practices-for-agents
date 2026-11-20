@@ -1,0 +1,21 @@
+# payment-service-service.yaml - ClusterIP: the internal gRPC backend the facade calls by Service
+# DNS (payment-service.apa.svc.cluster.local:9000), never reached from the host.
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: apa
+  labels:
+    app.kubernetes.io/name: payment-service
+    app.kubernetes.io/part-of: apa
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: payment-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+    - name: grpc
+      port: 9000
+      targetPort: grpc

@@ -14,9 +14,13 @@
 # stage copies examples/domain-model/ so it resolves as a reactor module.
 #
 # Extending this for a new chapter needs no edit here: any
-# examples/NN-slug/Containerfile is discovered automatically. This book's
-# final project (Part 7) is the only consumer as of this wave; no application
-# images exist yet.
+# examples/NN-slug/Containerfile is discovered automatically. One slug builds two images instead
+# of one: examples/15-reshape-grpc-behind-facade ships no top-level Containerfile, only
+# mcp-facade/Containerfile and payment-service/Containerfile (two separate modules, two separate
+# runtime images), each already built with the repo root as its context (see each Containerfile's
+# own header: it COPYs contracts/15-payment.proto, which lives outside examples/). TWO_IMAGE_SLUGS
+# below is the one place that lists a slug built this way; a future chapter with the same shape
+# adds its slug there, nothing else needs to change.
 #
 # Usage:
 #   ./load-images.sh                  # build + load every discovered chapter image
@@ -31,7 +35,23 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 EXAMPLES_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+REPO_ROOT="$(cd "${EXAMPLES_DIR}/.." && pwd)"
 PROFILE="${MINIKUBE_PROFILE:-apa}"
+
+# Slugs that ship two sub-module Containerfiles instead of one top-level Containerfile, for
+# example a gRPC backend built apart from the MCP facade in front of it. two_image_modules prints
+# the module directory names (relative to examples/<slug>/), one per line; each module's
+# Containerfile is built with the REPO ROOT as context (not examples/), since it COPYs a committed
+# contract from outside examples/ (see examples/15-reshape-grpc-behind-facade/*/Containerfile's own
+# header comment). A future chapter with the same two-image shape adds its slug and modules here;
+# nothing else in this script changes.
+two_image_modules() {
+    case "$1" in
+        15-reshape-grpc-behind-facade) printf 'mcp-facade\npayment-service\n' ;;
+        *) return 1 ;;
+    esac
+}
+is_two_image_slug() { two_image_modules "$1" >/dev/null 2>&1; }
 # `localhost/apa/<slug>:<tag>` (never `apa/<slug>:latest`): the `localhost/` prefix is the
 # explicit, no-registry local-image convention `scripts/validate.py`'s image-pin check already
 # requires for every other image in this book (a bare `apa/...` name reads as an unqualified
@@ -55,7 +75,10 @@ if (( $# > 0 )); then
 else
     SLUGS=()
     for d in "${EXAMPLES_DIR}"/[0-9][0-9]-*/ "${EXAMPLES_DIR}"/a[a-e]-*/; do
-        [[ -f "${d}Containerfile" ]] && SLUGS+=("$(basename "$d")")
+        slug="$(basename "$d")"
+        if [[ -f "${d}Containerfile" ]] || is_two_image_slug "$slug"; then
+            SLUGS+=("$slug")
+        fi
     done
 fi
 shopt -u nullglob
@@ -67,22 +90,43 @@ if (( ${#SLUGS[@]} == 0 )); then
 fi
 
 for slug in "${SLUGS[@]}"; do
-    cf="${EXAMPLES_DIR}/${slug}/Containerfile"
-    [[ -f "$cf" ]] || fail "no Containerfile for '${slug}' at examples/${slug}/Containerfile"
+    if is_two_image_slug "$slug"; then
+        while IFS= read -r module; do
+            cf="${EXAMPLES_DIR}/${slug}/${module}/Containerfile"
+            [[ -f "$cf" ]] || fail "no Containerfile for '${slug}/${module}' at examples/${slug}/${module}/Containerfile"
+        done < <(two_image_modules "$slug")
+    else
+        cf="${EXAMPLES_DIR}/${slug}/Containerfile"
+        [[ -f "$cf" ]] || fail "no Containerfile for '${slug}' at examples/${slug}/Containerfile"
+    fi
 done
 
-for slug in "${SLUGS[@]}"; do
-    image="localhost/apa/${slug}:${TAG}"
+build_and_load() { # build_and_load <image> <containerfile> <context>
+    local image="$1" cf="$2" ctx="$3"
     if [[ "$SKIP_BUILD" != "1" ]]; then
         step "build ${image}"
-        docker build -f "${EXAMPLES_DIR}/${slug}/Containerfile" -t "$image" "$EXAMPLES_DIR" \
-            || fail "docker build failed for ${slug}"
+        docker build -f "$cf" -t "$image" "$ctx" || fail "docker build failed for ${image}"
     else
         docker image inspect "$image" >/dev/null 2>&1 \
             || fail "SKIP_BUILD=1 but ${image} is not on the host; build it first"
     fi
     step "load ${image} into profile ${PROFILE}"
-    minikube image load "$image" -p "$PROFILE" || fail "minikube image load failed for ${slug}"
+    minikube image load "$image" -p "$PROFILE" || fail "minikube image load failed for ${image}"
+}
+
+for slug in "${SLUGS[@]}"; do
+    if is_two_image_slug "$slug"; then
+        while IFS= read -r module; do
+            image="localhost/apa/${slug}-${module}:${TAG}"
+            cf="${EXAMPLES_DIR}/${slug}/${module}/Containerfile"
+            # Repo-root context: each module's own Containerfile COPYs a committed contract from
+            # outside examples/ (contracts/15-payment.proto), so examples/ alone cannot resolve it.
+            build_and_load "$image" "$cf" "$REPO_ROOT"
+        done < <(two_image_modules "$slug")
+    else
+        image="localhost/apa/${slug}:${TAG}"
+        build_and_load "$image" "${EXAMPLES_DIR}/${slug}/Containerfile" "$EXAMPLES_DIR"
+    fi
 done
 
 step "images in profile ${PROFILE}"

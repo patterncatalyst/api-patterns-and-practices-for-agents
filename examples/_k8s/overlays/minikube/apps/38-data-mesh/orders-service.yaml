@@ -1,0 +1,20 @@
+# orders-service.yaml - the orders data product's one host-facing output port: MCP Streamable
+# HTTP at /mcp. NodePort (not ClusterIP), matching examples/_k8s/lib/endpoints.sh's "orders" row:
+# host 127.0.0.1:8088, published by minikube at profile creation, nodePort 30388 here.
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders
+  namespace: apa
+  labels:
+    app.kubernetes.io/name: orders
+    app.kubernetes.io/part-of: apa
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: orders
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      nodePort: 30388

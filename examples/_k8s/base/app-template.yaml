@@ -5,12 +5,15 @@
 # name, and probe set depending on whether the chapter's example ships
 # quarkus-smallrye-health).
 #
-# ClusterIP only: host access to a chapter app, once one exists, goes through
-# the SAME mesh and Service model a cluster user would see in production -
-# there is no host NodePort for app Services. (Platform pieces that DO need
-# host access - Grafana, Keycloak, Apicurio, Ollama, Kiali, Kafka's external
-# listener - are published from overlays/minikube and the operator CRs; see
-# the examples/_k8s/README.md endpoint map.)
+# ClusterIP by default: a chapter app's Service stays in-cluster unless it needs host access,
+# matching the SAME mesh and Service model a cluster user would see in production. CLAUDE.md bans a
+# forwarded, tunneled or proxied connection of any kind, never a NodePort: an app that IS
+# agent-facing from the host (the final project's data products) gets its own Service with
+# `type: NodePort` and a pinned `nodePort`, added to examples/_k8s/lib/endpoints.sh like any other
+# platform endpoint. See overlays/minikube/apps/38-data-mesh/ for that shape. (Platform pieces that
+# always need host access - Grafana, Keycloak, Apicurio, Ollama, Kiali, Kafka's external listener -
+# are published from overlays/minikube and the operator CRs; see the examples/_k8s/README.md
+# endpoint map.)
 #
 # No explicit Istio label is needed: base/namespace.yaml labels the apa
 # namespace for namespace-wide sidecar injection, so every pod created here

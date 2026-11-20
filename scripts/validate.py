@@ -471,6 +471,41 @@ def is_k8s_example(d: Path, body: str) -> bool:
     return False
 
 
+def check_image_ref(rep: Report, path: Path, ln: int, ref: str) -> None:
+    """A resolved image ref must be fully qualified, carry a tag, and never be :latest.
+    A digest (`@sha256:`) pins exactly, so a ref that carries one is accepted."""
+    first = ref.split("/")[0]
+    if "/" not in ref or not ("." in first or ":" in first or first == "localhost"):
+        rep.err(path, ln, f"image '{ref}' is not fully qualified (registry host missing)")
+    tail = ref.rsplit("/", 1)[-1]
+    if "@sha256:" in tail:
+        return
+    if ":" not in tail:
+        rep.err(path, ln, f"image '{ref}' has no tag")
+    elif tail.split(":", 1)[1] == "latest":
+        rep.err(path, ln, f"image '{ref}' uses :latest")
+
+
+def shell_image_defaults(text: str) -> dict[str, str]:
+    """Map a shell variable to its pinned image value, for the `examples/_k8s/*.sh`
+    idiom where an `image: ${VAR}` line in a kubectl-apply heredoc takes its pin from a
+    separate assignment. Handles the `VAR="${VAR:-registry/img:tag}"` default idiom these
+    scripts use, plus a plain `VAR="registry/img:tag"` / `VAR=registry/img:tag` literal.
+    Only image-shaped values (a `/` and a `:`, not a `scheme://` URL) are recorded, so a
+    stray `URL=`/`PORT=` assignment cannot masquerade as an image pin. The default idiom
+    wins over a bare literal of the same name; later assignments win within each form."""
+    out: dict[str, str] = {}
+    for m in re.finditer(r'^\s*([A-Za-z_][A-Za-z0-9_]*)="\$\{\1:-([^}]*)\}"\s*(?:#.*)?$', text, re.M):
+        out[m.group(1)] = m.group(2).strip()
+    for m in re.finditer(r'^\s*([A-Za-z_][A-Za-z0-9_]*)=(?!\$)"?([^"\n#]+?)"?\s*(?:#.*)?$', text, re.M):
+        var, val = m.group(1), m.group(2).strip()
+        if var in out:
+            continue
+        if "://" not in val and "/" in val and ":" in val:
+            out[var] = val
+    return out
+
+
 def check_examples(rep: Report):
     ex = rep.root / "examples"
     if not ex.is_dir():
@@ -530,16 +565,33 @@ def check_examples(rep: Report):
                     rep.err(c, ln, f"image '{ref}' has no default to check")
                     continue
                 ref = ref.replace(dm.group(0), dm.group(1))
-            first = ref.split("/")[0]
-            if "/" not in ref or not ("." in first or ":" in first or first == "localhost"):
-                rep.err(c, ln, f"image '{ref}' is not fully qualified (registry host missing)")
-            tail = ref.rsplit("/", 1)[-1]
-            if "@sha256:" in tail:
-                continue
-            if ":" not in tail:
-                rep.err(c, ln, f"image '{ref}' has no tag")
-            elif tail.split(":", 1)[1] == "latest":
-                rep.err(c, ln, f"image '{ref}' uses :latest")
+            check_image_ref(rep, c, ln, ref)
+
+    # examples/_k8s/*.sh: images appear as `image: ${VAR}` / `imageName: ${VAR}` inside
+    # kubectl-apply heredocs, with the pin on a separate `VAR="${VAR:-registry/img:tag}"`
+    # assignment. The YAML loop above cannot see across that indirection, so resolve the
+    # shell variable to its pinned value first, then apply the same ref checks.
+    SH_IMG_RE = re.compile(r"^\s*-?\s*(?:image|imageName):\s*(\S+)", re.M)
+    for c in files(rep.root, "examples/_k8s/**/*.sh"):
+        text = c.read_text(encoding="utf-8")
+        defaults = shell_image_defaults(text)
+        for m in SH_IMG_RE.finditer(text):
+            ref = m.group(1).strip("\"'")
+            ln = line_of(text, m.start())
+            vm = re.fullmatch(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}", ref)
+            if vm:
+                var = vm.group(1)
+                if var not in defaults:
+                    rep.err(c, ln, f"image variable '${{{var}}}' has no pinned assignment to check")
+                    continue
+                ref = defaults[var]
+            elif "${" in ref:
+                dm = re.search(r"\$\{[^}:]+:?-([^}]*)\}", ref)
+                if not dm:
+                    rep.err(c, ln, f"image '{ref}' has no default to check")
+                    continue
+                ref = ref.replace(dm.group(0), dm.group(1))
+            check_image_ref(rep, c, ln, ref)
 
 
 def check_no_forwarding(rep: Report):
@@ -802,6 +854,50 @@ def self_test() -> int:
                         any("KEEP" in x for x in e)
                         and not any("clean (re)deploy" in x for x in e)
                         and not any("readiness wait" in x for x in e), e))
+
+        def k8s_setup(name: str, body: str):
+            r = build("k8s-img-" + name)
+            k = r / "examples/_k8s"
+            k.mkdir(parents=True)
+            (k / "setup-x.sh").write_text(body)
+            return run(r).errors
+
+        good_img = (
+            "#!/usr/bin/env bash\n"
+            'FOO_IMAGE="${FOO_IMAGE:-quay.io/apicurio/apicurio-registry:3.3.4}"\n'
+            "kubectl apply -f - <<EOF\n"
+            "spec:\n  template:\n    spec:\n      containers:\n"
+            "        - name: foo\n          image: ${FOO_IMAGE}\n"
+            "EOF\n"
+        )
+        e = k8s_setup("good", good_img)
+        results.append(("_k8s heredoc image resolved from VAR default passes", not e, e))
+
+        latest_img = good_img.replace("apicurio-registry:3.3.4", "apicurio-registry:latest")
+        e = k8s_setup("latest", latest_img)
+        results.append(("_k8s heredoc image :latest in VAR default caught",
+                        any("uses :latest" in x and "apicurio-registry" in x for x in e), e))
+
+        notag_img = good_img.replace("apicurio-registry:3.3.4", "apicurio-registry")
+        e = k8s_setup("notag", notag_img)
+        results.append(("_k8s heredoc image missing tag in VAR default caught",
+                        any("has no tag" in x and "apicurio-registry" in x for x in e), e))
+
+        noregistry_img = good_img.replace("quay.io/apicurio/apicurio-registry:3.3.4",
+                                          "apicurio-registry:3.3.4")
+        e = k8s_setup("noreg", noregistry_img)
+        results.append(("_k8s heredoc image not fully qualified in VAR default caught",
+                        any("not fully qualified" in x and "apicurio-registry" in x for x in e), e))
+
+        unresolved_img = (
+            "#!/usr/bin/env bash\n"
+            "kubectl apply -f - <<EOF\n"
+            "          image: ${FOO_IMAGE}\n"
+            "EOF\n"
+        )
+        e = k8s_setup("unresolved", unresolved_img)
+        results.append(("_k8s heredoc image with no VAR assignment caught",
+                        any("has no pinned assignment" in x and "FOO_IMAGE" in x for x in e), e))
 
     failures = [name for name, ok, _ in results if not ok]
     for name, ok, detail in results:

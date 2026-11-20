@@ -1,0 +1,31 @@
+# peerauthentication.yaml - the apa namespace runs STRICT mutual TLS by default
+# (examples/_k8s/setup-istio.sh installs a namespace-wide STRICT PeerAuthentication named
+# `default`). That default rejects any plaintext inbound to a meshed pod, which is exactly what a
+# host request arriving through a product's NodePort is: it originates outside the mesh and carries
+# no client certificate, so Envoy drops it (a `curl` sees an empty reply, even against /q/health).
+# Kubelet probes still pass because Istio rewrites them to bypass the sidecar; a real host caller
+# does not get that bypass.
+#
+# This workload-scoped PeerAuthentication keeps the mesh STRICT everywhere except the one port a
+# host caller must reach plaintext: the data products' HTTP tool surface on 8080. PERMISSIVE on
+# 8080 accepts BOTH the host's plaintext NodePort traffic AND in-mesh mTLS, so nothing inside the
+# mesh is downgraded. Every other port stays STRICT: in particular the payments facade reaches the
+# internal payment-service over gRPC on 9000, which is not listed here and therefore still requires
+# mutual TLS. The selector matches the data-mesh app pods (app.kubernetes.io/part-of: apa); a
+# workload PeerAuthentication takes precedence over the namespace default for the pods it selects.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: data-mesh-apps
+  namespace: apa
+  labels:
+    app.kubernetes.io/part-of: apa
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: apa
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    "8080":
+      mode: PERMISSIVE

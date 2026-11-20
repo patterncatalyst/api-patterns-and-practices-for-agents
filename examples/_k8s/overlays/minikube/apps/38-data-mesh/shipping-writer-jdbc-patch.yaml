@@ -1,0 +1,20 @@
+# shipping-writer-jdbc-patch.yaml - a strategic merge patch over ../17-event-triggered-agent-
+# wakeup/deployment.yaml's own event-triggered-agent-wakeup Deployment: one env var replaced
+# (QUARKUS_DATASOURCE_JDBC_URL), merged by Kubernetes' own `env` list patch key (`name`), so every
+# other env entry (WAKEUP_CONSUMER_ENABLED, the datasource credentials, the shared ConfigMap)
+# passes through untouched. This is the data mesh's shipping-writer product: the same reused image
+# ch37 deploys, now owning the "shipping" database (its shipping.shipment_prep table) instead of
+# the shared "apa" database ch37's own standalone deploy uses.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-triggered-agent-wakeup
+  namespace: apa
+spec:
+  template:
+    spec:
+      containers:
+        - name: event-triggered-agent-wakeup
+          env:
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: "jdbc:postgresql://apa-postgres-rw.apa-data.svc.cluster.local:5432/shipping"

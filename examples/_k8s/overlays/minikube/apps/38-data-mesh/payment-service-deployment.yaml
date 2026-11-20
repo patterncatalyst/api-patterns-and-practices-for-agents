@@ -1,0 +1,88 @@
+# payment-service-deployment.yaml - the payments data product's internal gRPC backend:
+# examples/15-reshape-grpc-behind-facade/payment-service, reused unchanged. Not agent-facing (no
+# MCP tool surface, no NodePort): payments-facade-deployment.yaml is the product's only output
+# port. Owns the "payments" database in the one CNPG cluster; writes payments.payments on
+# takePayment and refundPayment.
+#
+# Image: built and loaded by ../../../../load-images.sh as
+# localhost/apa/15-reshape-grpc-behind-facade-payment-service:1.0.0, never pulled.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: apa
+  labels:
+    app.kubernetes.io/name: payment-service
+    app.kubernetes.io/part-of: apa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: payment-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: payment-service
+        app.kubernetes.io/part-of: apa
+    spec:
+      containers:
+        - name: payment-service
+          image: localhost/apa/15-reshape-grpc-behind-facade-payment-service:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: grpc
+              containerPort: 9000
+          envFrom:
+            - configMapRef:
+                name: apa-app-config
+          env:
+            - name: QUARKUS_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: apa-postgres-app
+                  key: username
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: apa-postgres-app
+                  key: password
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: "jdbc:postgresql://apa-postgres-rw.apa-data.svc.cluster.local:5432/payments"
+          startupProbe:
+            httpGet:
+              path: /q/health/started
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 150m
+              memory: 256Mi
+            limits:
+              cpu: 750m
+              memory: 512Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 185
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
