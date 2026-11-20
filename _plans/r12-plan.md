@@ -7,7 +7,15 @@ output: false
 
 # r12 Implementation Plan: ch37 (Running on Kubernetes with Strimzi) + ch38 (Final project: the focused multi-domain data mesh)
 
-Status: DRAFTED, awaiting owner review before build. Branch `release/r12` off `main` (r11 shipped at 53e8dfe). The book's final two chapters. This is the biggest shift in the book: from `docker compose` + per-chapter `verify.sh` to a minikube cluster. All house gates apply. OpenShift/CRC is OUT (Appendix B, r14).
+Status: APPROVED with decisions (owner 2026-11-20). The book's final two chapters. Biggest shift in the book: `docker compose` -> minikube cluster. All house gates apply. OpenShift/CRC is OUT (Appendix B, r14).
+
+**LOCKED DECISIONS (owner 2026-11-20):**
+1. **SPLIT: r12a = ch37 + `examples/_k8s/` platform + one reference service (verified headless); r12b = ch38 the 3-product mesh.** Build r12a first, ship it as a clean checkpoint, then r12b.
+2. **3 data products** (ch38): orders (ch13/07/08), shipping (ch14/17), payments (ch15 gRPC); governance as a cross-cutting plane (Apicurio + Keycloak + ch21/34 audit). No 4th (inventory) product.
+3. **Observability = the single already-pinned `grafana/otel-lgtm:0.41.0` image as one Deployment** (one NodePort), NOT the separate true LGTM Helm charts. No new LGTM chart pins.
+4. **INCLUDE Istio (+ Kiali)** on the cluster for parity with `datamesh-reference-arch-quarkus` (mTLS STRICT per that sibling + lgtm-minikube-stack conventions). Still DEFER KEDA and OpenMetadata. New pins: Istio/istioctl + Kiali (record at G0).
+5. **ch37 proof service = ch17 event-triggered-agent-wakeup** (exercises Strimzi Kafka + CNPG + Ollama + OTel in one flow).
+6. New host/operator pins (minikube, Kubernetes `--kubernetes-version`, kubectl, helm, Istio, istioctl, Kiali) surveyed to latest stable and recorded in versions.md at G0 with reasons; this approval authorizes them.
 
 ## Approach
 
