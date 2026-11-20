@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:patterncatalyst:apa:outbound-call-audit",
+  "title": "OutboundCallAudit",
+  "description": "One append-only record on apa.audit.outbound-calls: a call this code's own agent made OUT to another API. Folded, never mutated, into the audit-service projection. Draft-07, not 2020-12 or 2019-09: Apicurio Registry 3.3.4's JSON Schema compatibility checker cannot determine either later draft and returns HTTP 422 for any version check against it (see _plans/versions.md).",
+  "type": "object",
+  "required": ["id", "correlationId", "direction", "target", "argumentDigest", "occurredAt"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "UUID of this record; the projection's idempotency key, so a redelivery folds exactly once",
+      "example": "b3b3c6b0-6e9b-4f2a-9b0a-7a2a9f6b1c10"
+    },
+    "correlationId": {
+      "type": "string",
+      "description": "ties the call back to the business operation that triggered it",
+      "example": "O-9001"
+    },
+    "direction": {
+      "type": "string",
+      "enum": ["OUTBOUND"],
+      "description": "always OUTBOUND: this log audits only calls this code's own agent makes out, never a call made in"
+    },
+    "target": {
+      "type": "string",
+      "description": "the tool name, or an HTTP target for a call that is not MCP at all",
+      "example": "orderStatus"
+    },
+    "argumentDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 hex digest of the call's arguments, never the raw arguments themselves",
+      "example": "6b7a1d9b6f0f7a3c8e2b6a5f9d3c1e0a4b8f6d2c0a9e7b5c3d1f9a7b5c3d1f9a"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tokensIn": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "set only when the outbound call itself is a model call with a token cost"
+    },
+    "tokensOut": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "set only when the outbound call itself is a model call with a token cost"
+    },
+    "costUsd": {
+      "type": ["string", "null"],
+      "description": "derived from tokensIn/tokensOut alone, never from content; decimal string",
+      "example": "0.000027"
+    }
+  }
+}
