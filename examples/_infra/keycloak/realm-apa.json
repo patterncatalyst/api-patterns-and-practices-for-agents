@@ -54,6 +54,42 @@
         "include.in.token.scope": "true",
         "display.on.consent.screen": "false"
       }
+    },
+    {
+      "name": "step-up-acr",
+      "description": "r11 (ch35): stamps a high-assurance acr claim and the apa-mcp audience onto a token traded through RFC 8693 token exchange. Not a readable scope (include.in.token.scope false, like roles): two protocol mappers, no caller-visible permission.",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "step-up acr",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "acr",
+            "claim.value": "urn:patterncatalyst:acr:step-up",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "apa-mcp audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "apa-mcp",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
     }
   ],
   "clients": [
@@ -74,6 +110,28 @@
         "mcp:tools:read",
         "mcp:tools:write"
       ]
+    },
+    {
+      "clientId": "apa-agent-bff",
+      "description": "r11 (ch35) lab only: confidential requester for RFC 8693 standard token exchange (v2). Exchanges its own low-assurance mcp:tools:read token for a step-up, mcp:tools:write token.",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "apa-agent-bff-dev-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "standard.token.exchange.enabled": "true"
+      },
+      "defaultClientScopes": [
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "mcp:tools:read",
+        "mcp:tools:write",
+        "step-up-acr"
+      ]
     }
   ],
   "users": [
@@ -81,6 +139,14 @@
       "username": "service-account-apa-mcp",
       "enabled": true,
       "serviceAccountClientId": "apa-mcp",
+      "realmRoles": [
+        "agent"
+      ]
+    },
+    {
+      "username": "service-account-apa-agent-bff",
+      "enabled": true,
+      "serviceAccountClientId": "apa-agent-bff",
       "realmRoles": [
         "agent"
       ]

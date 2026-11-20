@@ -1,0 +1,43 @@
+name: apa-35
+
+include:
+  - path: ../_infra/compose.yaml
+  - path: ../_infra/compose.lgtm.yaml
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: 35-identity-and-authorization-guardrails/Containerfile
+    container_name: apa-identity-and-authorization-guardrails
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/apa
+      QUARKUS_DATASOURCE_USERNAME: apa
+      QUARKUS_DATASOURCE_PASSWORD: apa
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/apa
+      QUARKUS_OIDC_TOKEN_ISSUER: http://localhost:8180/realms/apa
+      # The negative-witness knob (see application.properties): unset or "true" keeps the step-up
+      # acr floor enforced; verify.sh flips this to "false" for one recreate, then back.
+      STEPUP_ENFORCED: ${STEPUP_ENFORCED:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+networks:
+  apa:
+    name: apa
