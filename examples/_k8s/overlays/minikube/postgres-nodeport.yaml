@@ -1,0 +1,24 @@
+# postgres-nodeport.yaml - host access to the Postgres primary, for a host
+# psql or a demo script. CloudNativePG owns and manages its own `-rw`/`-ro`/
+# `-r` Services (ClusterIP, used by apps via base/config.yaml's
+# QUARKUS_DATASOURCE_JDBC_URL); this is a SEPARATE, hand-authored Service
+# that targets the same primary pod by the operator's own labels, so it
+# never competes with or overwrites an operator-managed object.
+# ../../setup-postgres-operator.sh applies this file.
+apiVersion: v1
+kind: Service
+metadata:
+  name: apa-postgres-nodeport
+  namespace: apa-data
+  labels:
+    app.kubernetes.io/name: apa-postgres
+spec:
+  type: NodePort
+  selector:
+    cnpg.io/cluster: apa-postgres
+    cnpg.io/instanceRole: primary
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      nodePort: 30543

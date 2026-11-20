@@ -1,0 +1,69 @@
+# config.yaml - shared env contract for chapter app Deployments. One
+# %prod env-driven config feeds the SAME image across docker compose and
+# minikube, using the identical env var names examples/_infra/compose.yaml
+# and the chapter examples already read (see
+# examples/17-event-triggered-agent-wakeup/compose.yaml and its
+# application.properties) - no application code change is needed to run on
+# either target.
+#
+# The in-cluster DNS names below come straight from the setup scripts that
+# own each resource; do not hand-edit them without checking those scripts:
+#
+#   - Kafka bootstrap : ../setup-kafka-operator.sh
+#       Kafka CR metadata.name = "apa" -> Strimzi creates Service
+#       "apa-kafka-bootstrap" in the apa-data namespace.
+#   - Postgres         : ../setup-postgres-operator.sh
+#       Cluster CR name "apa-postgres" -> CloudNativePG creates Service
+#       "apa-postgres-rw" in apa-data, database "apa", owner "apa".
+#   - Apicurio         : ../setup-apicurio.sh
+#       Service "apicurio" in apa-data, v3 API path /apis/registry/v3.
+#   - Keycloak         : ../setup-keycloak.sh
+#       Service "keycloak" in apa-data, realm "apa" (imported from
+#       examples/_infra/keycloak/realm-apa.json).
+#   - otel-lgtm        : ../setup-lgtm.sh
+#       Service "otel-lgtm" in the observability namespace, OTLP on 4317/4318.
+#   - Ollama           : ../setup-ollama.sh
+#       Service "ollama" in apa-data, API on 11434.
+#
+# DB username/password are deliberately NOT a second Secret here.
+# setup-postgres-operator.sh's Cluster CR (bootstrap.initdb) makes
+# CloudNativePG auto-generate a Secret named "apa-postgres-app" in apa-data,
+# with keys username/password/dbname/host/port/uri/jdbc-uri - created and
+# rotated by the operator. A hand-authored duplicate here would need a
+# guessed password and create two sources of truth for the same identity.
+# base/app-template.yaml references that Secret directly via secretKeyRef.
+#
+# QUARKUS_OIDC_TOKEN_ISSUER is set to the SAME internal URL as
+# QUARKUS_OIDC_AUTH_SERVER_URL: both point at the in-cluster Keycloak, which
+# serves "apa" realm tokens whose iss claim depends on Keycloak's own
+# frontend-URL resolution in dev mode (request Host header), not on this
+# ConfigMap. If a caller mints a token through the host NodePort
+# (127.0.0.1:8180) instead of going through an in-cluster client, the iss
+# claim it receives may not match this value; this needs a live check once a
+# chapter app actually validates a token in-cluster (flagged for the live
+# cluster lane).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apa-app-config
+  namespace: apa
+  labels:
+    app.kubernetes.io/part-of: apa
+data:
+  KAFKA_BOOTSTRAP_SERVERS: "apa-kafka-bootstrap.apa-data.svc.cluster.local:9092"
+  # Camel's kafka component reads this name directly (see every chapter's
+  # compose.yaml, e.g. examples/17-event-triggered-agent-wakeup/compose.yaml).
+  CAMEL_COMPONENT_KAFKA_BROKERS: "apa-kafka-bootstrap.apa-data.svc.cluster.local:9092"
+
+  QUARKUS_DATASOURCE_JDBC_URL: "jdbc:postgresql://apa-postgres-rw.apa-data.svc.cluster.local:5432/apa"
+
+  APICURIO_REGISTRY_URL: "http://apicurio.apa-data.svc.cluster.local:8080/apis/registry/v3"
+
+  QUARKUS_OIDC_AUTH_SERVER_URL: "http://keycloak.apa-data.svc.cluster.local:8080/realms/apa"
+  QUARKUS_OIDC_TOKEN_ISSUER: "http://keycloak.apa-data.svc.cluster.local:8080/realms/apa"
+
+  QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-lgtm.observability.svc.cluster.local:4318"
+
+  QUARKUS_LANGCHAIN4J_OLLAMA_BASE_URL: "http://ollama.apa-data.svc.cluster.local:11434"
+
+  QUARKUS_PROFILE: "prod"

@@ -1,0 +1,31 @@
+# kustomization.yaml - where the platform's host-facing NodePort Services
+# live, for the pieces this platform owns as raw manifests (otel-lgtm,
+# Keycloak, Apicurio, Ollama, plus a debug-only Postgres Service). Each
+# Service's internal `port` matches the container's own listening port (so
+# in-cluster DNS resolves for base/config.yaml's env contract); each
+# `nodePort` is the fixed value ../../lib/endpoints.sh and
+# ../../setup-profile.sh publish on 127.0.0.1 at profile creation.
+#
+# Kiali and Kafka are DELIBERATELY NOT duplicated here: Kiali's NodePort is a
+# field on its own `Kiali` custom resource (../../setup-kiali.sh), and
+# Kafka's external listener is a field on its own `Kafka` custom resource
+# (../../setup-kafka-operator.sh) - both operators own and reconcile their
+# Service objects directly, and a competing hand-authored Service of the
+# same name would fight that ownership.
+#
+# No `namespace:` transformer: the five Services here span two namespaces
+# (observability, apa-data), so every resource carries its own explicit
+# metadata.namespace instead.
+#
+# Apps stay ClusterIP (see ../../base/app-template.yaml) and are never
+# published here, matching the no-forwarding, NodePorts-only house rule.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - otel-lgtm-nodeport.yaml
+  - keycloak-nodeport.yaml
+  - apicurio-nodeport.yaml
+  - ollama-nodeport.yaml
+  - postgres-nodeport.yaml
