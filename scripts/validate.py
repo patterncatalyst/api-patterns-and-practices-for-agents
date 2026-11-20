@@ -435,6 +435,42 @@ def check_callout_shape(rep: Report, p: Path, lines: list[str], at: int, off: in
         rep.err(p, ln, "callout must not contain a nested quote")
 
 
+def _kubectl_window_has(body: str, gate_re: str, target_re: str, window: int = 8) -> bool:
+    """True when a line matching target_re falls within `window` lines of a line matching
+    gate_re (used to find a teardown command gated by a nearby `KEEP` check)."""
+    lines = body.split("\n")
+    gate_idxs = [i for i, ln in enumerate(lines) if re.search(gate_re, ln)]
+    for i in gate_idxs:
+        for j in range(max(0, i - window), min(len(lines), i + window + 1)):
+            if re.search(target_re, lines[j]):
+                return True
+    return False
+
+
+def is_k8s_example(d: Path, body: str) -> bool:
+    """A Kubernetes example drives a cluster rather than compose. Detection signal: `verify.sh`
+    invokes `kubectl` or `minikube` as an actual command (a non-comment line where the token is
+    followed by more input, e.g. `kubectl apply ...`), or it references the shared
+    `examples/_k8s` bootstrap, or it ships its own manifests (a `k8s/` subdir or a
+    `kustomization.yaml`). Keying on an actual command invocation, not a bare substring, keeps a
+    compose example that merely mentions "kubectl" in a comment or README prose on the compose
+    branch.
+    """
+    for ln in body.split("\n"):
+        s = ln.strip()
+        if s.startswith("#"):
+            continue
+        if re.search(r"\b(?:kubectl|minikube)\s+\S", s):
+            return True
+    if "examples/_k8s" in body:
+        return True
+    if (d / "k8s").is_dir():
+        return True
+    if any(d.glob("**/kustomization.yaml")):
+        return True
+    return False
+
+
 def check_examples(rep: Report):
     ex = rep.root / "examples"
     if not ex.is_dir():
@@ -452,8 +488,28 @@ def check_examples(rep: Report):
             if r.returncode:
                 rep.err(v, None, f"bash -n failed: {r.stderr.strip()}")
             body = v.read_text(encoding="utf-8")
-            if not (re.search(r"down -v --remove-orphans", body)
-                    and re.search(r"up -d --build --force-recreate --renew-anon-volumes --wait", body)):
+            if is_k8s_example(d, body):
+                # The K8s fresh-run contract (app layer only; examples/_k8s brings the platform
+                # up separately): a clean (re)deploy, a readiness wait, and a KEEP-gated teardown.
+                has_delete = re.search(r"kubectl delete\b[^\n]*--ignore-not-found", body) is not None
+                has_apply = re.search(r"kubectl apply\b", body) is not None
+                has_wait = re.search(r"kubectl rollout status\b|kubectl wait\b", body) is not None
+                has_teardown = _kubectl_window_has(
+                    body, r"\bKEEP\b",
+                    r"kubectl delete\b|teardown\.sh\b|minikube\b.*\b(?:stop|delete)\b")
+                missing = []
+                if not (has_delete and has_apply):
+                    missing.append("a clean (re)deploy before applying (`kubectl delete ... "
+                                   "--ignore-not-found` and `kubectl apply`)")
+                if not has_wait:
+                    missing.append("a readiness wait (`kubectl rollout status` or `kubectl wait`)")
+                if not has_teardown:
+                    missing.append("a `KEEP`-gated teardown (`kubectl delete`, the shared "
+                                   "`teardown.sh`, or `minikube ... stop`/`delete`)")
+                if missing:
+                    rep.err(v, None, "verify.sh must start fresh: missing " + "; ".join(missing))
+            elif not (re.search(r"down -v --remove-orphans", body)
+                      and re.search(r"up -d --build --force-recreate --renew-anon-volumes --wait", body)):
                 rep.err(v, None, "verify.sh must start fresh: `down -v --remove-orphans`, then "
                                  "`up -d --build --force-recreate --renew-anon-volumes --wait`")
         if not (d / "README.md").is_file():
@@ -664,6 +720,88 @@ def self_test() -> int:
         (r / "examples/01-demo/compose.yaml").write_text("services:\n  x:\n    image: redis:latest\n")
         e = run(r).errors
         results.append((":latest image caught", any("uses :latest" in x for x in e), e))
+
+        good_k8s_verify = (
+            "#!/bin/bash\n"
+            "set -euo pipefail\n"
+            "kubectl delete -k k8s/overlays/dev --ignore-not-found\n"
+            "kubectl apply -k k8s/overlays/dev\n"
+            "kubectl rollout status deployment/demo --timeout=120s\n"
+            "echo done\n"
+            'if [ "${KEEP:-0}" != "1" ]; then\n'
+            "  kubectl delete -k k8s/overlays/dev --ignore-not-found\n"
+            "fi\n"
+        )
+
+        r = build("k8s-good")
+        (r / "examples/37-running-on-kubernetes-with-strimzi").mkdir(parents=True)
+        (r / "examples/37-running-on-kubernetes-with-strimzi/verify.sh").write_text(good_k8s_verify)
+        (r / "examples/37-running-on-kubernetes-with-strimzi/verify.sh").chmod(0o755)
+        (r / "examples/37-running-on-kubernetes-with-strimzi/README.md").write_text("# demo\n")
+        e = run(r).errors
+        results.append(("good K8s example passes the K8s fresh-run contract",
+                        not any("must start fresh" in x for x in e), e))
+
+        r = build("k8s-missing-delete")
+        missing_delete_verify = (
+            "#!/bin/bash\n"
+            "set -euo pipefail\n"
+            "kubectl apply -k k8s/overlays/dev\n"
+            "kubectl rollout status deployment/demo --timeout=120s\n"
+            "echo done\n"
+            'if [ "${KEEP:-0}" != "1" ]; then\n'
+            "  minikube -p demo stop\n"
+            "fi\n"
+        )
+        (r / "examples/37-running-on-kubernetes-with-strimzi").mkdir(parents=True)
+        (r / "examples/37-running-on-kubernetes-with-strimzi/verify.sh").write_text(missing_delete_verify)
+        (r / "examples/37-running-on-kubernetes-with-strimzi/verify.sh").chmod(0o755)
+        (r / "examples/37-running-on-kubernetes-with-strimzi/README.md").write_text("# demo\n")
+        e = run(r).errors
+        results.append(("K8s example missing the pre-apply kubectl delete caught",
+                        any("clean (re)deploy" in x for x in e)
+                        and not any("readiness wait" in x for x in e)
+                        and not any("KEEP" in x for x in e), e))
+
+        r = build("k8s-missing-wait")
+        missing_wait_verify = (
+            "#!/bin/bash\n"
+            "set -euo pipefail\n"
+            "kubectl delete -k k8s/overlays/dev --ignore-not-found\n"
+            "kubectl apply -k k8s/overlays/dev\n"
+            "echo done\n"
+            'if [ "${KEEP:-0}" != "1" ]; then\n'
+            "  kubectl delete -k k8s/overlays/dev --ignore-not-found\n"
+            "fi\n"
+        )
+        (r / "examples/37-running-on-kubernetes-with-strimzi").mkdir(parents=True)
+        (r / "examples/37-running-on-kubernetes-with-strimzi/verify.sh").write_text(missing_wait_verify)
+        (r / "examples/37-running-on-kubernetes-with-strimzi/verify.sh").chmod(0o755)
+        (r / "examples/37-running-on-kubernetes-with-strimzi/README.md").write_text("# demo\n")
+        e = run(r).errors
+        results.append(("K8s example missing the readiness wait caught",
+                        any("readiness wait" in x for x in e)
+                        and not any("clean (re)deploy" in x for x in e)
+                        and not any("KEEP" in x for x in e), e))
+
+        r = build("k8s-missing-teardown")
+        missing_teardown_verify = (
+            "#!/bin/bash\n"
+            "set -euo pipefail\n"
+            "kubectl delete -k k8s/overlays/dev --ignore-not-found\n"
+            "kubectl apply -k k8s/overlays/dev\n"
+            "kubectl rollout status deployment/demo --timeout=120s\n"
+            "echo done\n"
+        )
+        (r / "examples/37-running-on-kubernetes-with-strimzi").mkdir(parents=True)
+        (r / "examples/37-running-on-kubernetes-with-strimzi/verify.sh").write_text(missing_teardown_verify)
+        (r / "examples/37-running-on-kubernetes-with-strimzi/verify.sh").chmod(0o755)
+        (r / "examples/37-running-on-kubernetes-with-strimzi/README.md").write_text("# demo\n")
+        e = run(r).errors
+        results.append(("K8s example missing the KEEP-gated teardown caught",
+                        any("KEEP" in x for x in e)
+                        and not any("clean (re)deploy" in x for x in e)
+                        and not any("readiness wait" in x for x in e), e))
 
     failures = [name for name, ok, _ in results if not ok]
     for name, ok, detail in results:
