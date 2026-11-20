@@ -258,8 +258,13 @@ def check_dashes(rep: Report):
 
 
 def chapter_words(body: str) -> int:
+    # Prose only: fenced code is already dropped by prose_lines; markdown table rows
+    # (and their separator rows) are reference content, not prose, so a table-heavy
+    # reference page (for example the appendix pattern map and glossary) is not charged
+    # for its tables. Dashes, self-reference and host-id checks still scan table rows.
     body = re.sub(r"<!--.*?-->", " ", body, flags=re.S)
-    return len(re.findall(r"[A-Za-z0-9][\w'’-]*", "\n".join(t for _, t in prose_lines(body))))
+    lines = [t for _, t in prose_lines(body) if not re.match(r"\s*\|", t)]
+    return len(re.findall(r"[A-Za-z0-9][\w'’-]*", "\n".join(lines)))
 
 
 def check_bro(rep: Report, p: Path, plines, off: int):
@@ -642,6 +647,11 @@ def self_test() -> int:
     seg_refs = '## References\n\n- A reference.\n'
     good_doc = seg_front + seg_lo + seg_wtm + seg_pattern + seg_bro + seg_anti + seg_wntu + seg_refs
     results = []
+    # chapter_words counts prose only: a table-heavy reference page is not charged for its tables.
+    _tbl_doc = "Prose intro here.\n\n| col a | col b |\n|---|---|\n" + "".join(
+        f"| row {i} alpha beta gamma delta | epsilon zeta eta theta |\n" for i in range(200))
+    results.append(("chapter_words excludes markdown table rows from the prose count",
+                    chapter_words(_tbl_doc) < 20, [f"counted {chapter_words(_tbl_doc)} (expected < 20)"]))
     with tempfile.TemporaryDirectory() as tmp:
         def build(name: str) -> Path:
             r = Path(tmp) / name
