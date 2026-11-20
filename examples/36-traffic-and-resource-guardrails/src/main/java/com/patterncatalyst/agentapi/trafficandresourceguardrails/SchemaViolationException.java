@@ -2,7 +2,7 @@ package com.patterncatalyst.agentapi.trafficandresourceguardrails;
 
 import java.util.List;
 
-/** The ingest payload failed {@link IngestSchemaValidator}. Carries every violation message. */
+/** The ingest payload failed {@link IngestSchemaValidationRoute}. Carries every violation message. */
 public class SchemaViolationException extends RuntimeException {
 
     private final List<String> violations;
