@@ -65,8 +65,8 @@ PASS 10: restored: the consumer that was disabled now records O-91002's shipment
 10/10 checks passed
 ```
 
-This run record is provisional until the orchestrator's cluster lane executes `verify.sh` against
-a live profile; `_plans/verification-log.md` carries the confirmed result.
+This run was confirmed live on a minikube profile (10/10); `_plans/verification-log.md` carries the
+recorded result.
 
 ## Layout
 

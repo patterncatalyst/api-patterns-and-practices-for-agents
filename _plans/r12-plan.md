@@ -106,3 +106,6 @@ New contracts: `contracts/37-cluster-topology.md` (optional), `contracts/38-data
 - _plans/versions.md (record every new K8s pin with a reason)
 - _plans/verification-log.md (cluster-lane fresh-run records; Verified only on a real pass)
 - ~/Dev/datamesh-reference-arch-quarkus/scripts/bootstrap.sh + k8s/README.md (reference SHAPE for tiered bring-up, image-load-no-registry, NodePort access; reused by reference, never copied)
+
+## r12b carry-ins (tracked follow-ups from r12a)
+- **Automation gap (automation-over-advisory):** `validate.py`'s image-pin check scans `examples/_k8s/**/*.yaml` but NOT images embedded in `examples/_k8s/*.sh` heredocs (`image: ${APICURIO_IMAGE}` etc., whose pins live on a separate `VAR="${VAR:-registry/img:tag}"` assignment). r12a's images were verified correct by hand and by the Opus pass, but the deterministic gate does not cover the shell-heredoc case (it needs shell-variable resolution + its own self-tests). Build this check as the first r12b task, before ch38 adds more `_k8s` heredoc images.
