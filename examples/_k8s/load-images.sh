@@ -32,7 +32,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 EXAMPLES_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PROFILE="${MINIKUBE_PROFILE:-apa}"
-TAG="latest"
+# `localhost/apa/<slug>:<tag>` (never `apa/<slug>:latest`): the `localhost/` prefix is the
+# explicit, no-registry local-image convention `scripts/validate.py`'s image-pin check already
+# requires for every other image in this book (a bare `apa/...` name reads as an unqualified
+# registry reference), and the tag matches each example's own Maven `<version>` (every example
+# packages 1.0.0), never the floating `latest` tag the house versioning rule bans. Override only
+# to load a different build of the same example.
+TAG="${IMAGE_TAG:-1.0.0}"
 SKIP_BUILD="${SKIP_BUILD:-0}"
 
 fail() { printf '\n\xe2\x9c\x97 %s\n' "$1" >&2; exit 1; }
@@ -66,7 +72,7 @@ for slug in "${SLUGS[@]}"; do
 done
 
 for slug in "${SLUGS[@]}"; do
-    image="apa/${slug}:${TAG}"
+    image="localhost/apa/${slug}:${TAG}"
     if [[ "$SKIP_BUILD" != "1" ]]; then
         step "build ${image}"
         docker build -f "examples/${slug}/Containerfile" -t "$image" "$EXAMPLES_DIR" \
@@ -80,9 +86,12 @@ for slug in "${SLUGS[@]}"; do
 done
 
 step "images in profile ${PROFILE}"
-minikube image ls -p "$PROFILE" | grep -E '^apa/' || true
+minikube image ls -p "$PROFILE" | grep -E '^localhost/apa/' || true
 
-# Restart Deployments that already exist so they pick up the new image.
+# Restart Deployments named identically to their example slug so they pick up the new image. A
+# Deployment named after the application instead (an existing example reused unchanged, for
+# instance) is not matched here; its own fresh `kubectl delete -k ... && kubectl apply -k ...`
+# cycle (every example's verify.sh) already picks up a freshly loaded image without this step.
 if command -v kubectl >/dev/null 2>&1; then
     for slug in "${SLUGS[@]}"; do
         if kubectl --context "$PROFILE" get deployment "$slug" -n apa >/dev/null 2>&1; then

@@ -2,8 +2,9 @@
 
 The shared Kubernetes platform for the final project (Part 7): one minikube
 profile, tiered and health-gated bring-up, a fixed host-port map and the
-kustomize base a chapter app lands on in a later wave. This wave ships the
-platform only; no chapter app exists yet.
+kustomize base a chapter app lands on. The setup chapter that proves this
+platform end to end deploys one reused service onto it; see
+`overlays/minikube/apps/`.
 
 ## Bring-up
 
@@ -111,14 +112,16 @@ and sources.
 
 ```bash
 ./load-images.sh                # build and load every examples/NN-slug/Containerfile found
-./load-images.sh 37-slug         # one or more named chapters
+./load-images.sh 17-event-triggered-agent-wakeup   # one or more named chapters
 ```
 
 The build context is `examples/`, the Maven reactor root, so
 `examples/domain-model` resolves as a reactor module, matching every
-chapter's own Containerfile convention. No chapter app exists in this wave;
-the script discovers one automatically once a later wave adds a
-`Containerfile` under `examples/NN-slug/`.
+chapter's own Containerfile convention. Every image loads as
+`localhost/apa/<slug>:<version>` (never a bare, unqualified name and never
+`latest`), matching each example's own Maven `<version>`; `overlays/minikube/apps/*`
+Deployments reference that exact name with `imagePullPolicy: IfNotPresent`, so
+the kubelet never attempts an external pull.
 
 ## Applying the overlay
 
@@ -127,9 +130,11 @@ kubectl apply -k overlays/minikube
 ```
 
 `bootstrap.sh` already applies this at the end of a full run; running it by
-hand is for after a manual change to one of the platform Services. A
-chapter app, once it exists, is deployed with the same command once its
-Deployment and Service land in `base/`.
+hand is for after a manual change to one of the platform Services. A chapter
+app's own Deployment and Service live under `overlays/minikube/apps/<slug>/`,
+each its own kustomization (never folded into the shared platform overlay),
+so a chapter's `verify.sh` can delete and reapply its own app without
+touching the namespace, the ConfigMap or any other chapter's app.
 
 ## Static validation
 
@@ -140,6 +145,7 @@ shellcheck --severity=warning *.sh lib/*.sh
 for f in *.sh lib/*.sh; do bash -n "$f"; done
 kubectl kustomize base
 kubectl kustomize overlays/minikube
+kubectl kustomize overlays/minikube/apps/17-event-triggered-agent-wakeup
 python3 ../../scripts/validate.py
 python3 ../../scripts/host_ids.py check
 ../../scripts/voice-scan.sh

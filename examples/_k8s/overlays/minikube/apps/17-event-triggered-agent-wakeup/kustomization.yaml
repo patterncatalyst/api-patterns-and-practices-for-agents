@@ -1,0 +1,12 @@
+# kustomization.yaml - this app only (Deployment + Service), deliberately NOT layered on ../../../
+# ../base: the shared namespace and apa-app-config ConfigMap already exist once bootstrap.sh has
+# run, and re-including them here would make this app's own `kubectl delete -k .` tear down the
+# namespace (and every other chapter app in it) instead of just this one Deployment and Service.
+# examples/37-running-on-kubernetes-with-strimzi/verify.sh targets this kustomization directly for
+# its fresh app-layer (re)deploy.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - deployment.yaml
+  - service.yaml

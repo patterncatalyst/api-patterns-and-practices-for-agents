@@ -67,6 +67,11 @@ Works only: books, papers and specifications. Documentation pages are cited unde
     <tr><td><a href="https://camel.apache.org/camel-quarkus/latest/" rel="noopener">Camel Quarkus</a></td><td>The Quarkus runtime for Camel</td></tr>
     <tr><td><a href="https://kafka.apache.org/documentation/" rel="noopener">Apache Kafka</a></td><td>The broker, clients, and topics behind the async patterns</td></tr>
     <tr><td><a href="https://strimzi.io/documentation/" rel="noopener">Strimzi</a></td><td>Kafka on Kubernetes for the final project</td></tr>
+    <tr><td><a href="https://kubernetes.io/docs/home/" rel="noopener">Kubernetes documentation</a></td><td>The container orchestration platform the final project runs on</td></tr>
+    <tr><td><a href="https://minikube.sigs.k8s.io/docs/" rel="noopener">minikube documentation</a></td><td>The local Kubernetes cluster used to stand up and verify the final project</td></tr>
+    <tr><td><a href="https://cloudnative-pg.io/documentation/" rel="noopener">CloudNativePG documentation</a></td><td>The PostgreSQL operator for the final project's Kubernetes platform</td></tr>
+    <tr><td><a href="https://istio.io/latest/docs/" rel="noopener">Istio documentation</a></td><td>The service mesh and STRICT mutual TLS policy on the final project's application namespace</td></tr>
+    <tr><td><a href="https://kiali.io/docs/" rel="noopener">Kiali documentation</a></td><td>Mesh observability for the final project's Istio installation</td></tr>
     <tr><td><a href="https://www.apicur.io/registry/docs/" rel="noopener">Apicurio Registry</a></td><td>Schema registry and compatibility rules for the async contracts</td></tr>
     <tr><td><a href="https://smallrye.io/docs/smallrye-fault-tolerance/" rel="noopener">SmallRye Fault Tolerance</a></td><td>The @RateLimit annotation and RateLimitException behind the ingest rate-limit guardrail</td></tr>
     <tr><td><a href="https://camel.apache.org/components/latest/json-validator-component.html" rel="noopener">Camel JSON Schema Validator component</a></td><td>JSON Schema validation for the ingest schema-validity guardrail</td></tr>
