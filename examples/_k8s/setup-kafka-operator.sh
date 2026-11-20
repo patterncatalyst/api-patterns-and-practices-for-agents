@@ -99,8 +99,8 @@ metadata:
   namespace: ${NS}
 spec:
   kafka:
-    version: ${KAFKA_VERSION}
-    metadataVersion: ${KAFKA_VERSION}
+    version: "${KAFKA_VERSION}"
+    metadataVersion: "${KAFKA_VERSION%.*}"
     listeners:
       - name: plain
         port: 9092
@@ -117,8 +117,6 @@ spec:
         configuration:
           bootstrap:
             nodePort: ${NP_KAFKA}
-            advertisedHost: "127.0.0.1"
-            advertisedPort: ${TP_KAFKA}
           brokers:
             - broker: 0
               nodePort: ${BROKER_NODE_PORT}

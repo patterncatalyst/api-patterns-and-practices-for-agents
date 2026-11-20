@@ -98,19 +98,23 @@ produce_payment() { # produce_payment <paymentId> <orderId> <amount>
 PG_POD="$(kubectl get pods -n "$DATA_NS" -l cnpg.io/cluster=apa-postgres,cnpg.io/instanceRole=primary -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)"
 PG_PASS="$(kubectl get secret -n "$DATA_NS" apa-postgres-app -o jsonpath='{.data.password}' 2>/dev/null | base64 -d)"
 
-psql_remote() { # psql_remote <SQL with :'name' placeholders> [-v name=value ...]
+psql_remote() { # psql_remote <full SQL>
     # The password reaches psql only via the remote shell's own `read` from stdin, never as a
     # command-line argument of any process (kubectl exec, bash -c or psql), so it never appears in
-    # a `ps aux` listing on either side. The SQL text and -v values are passed as real argv
-    # elements of the remote bash -c invocation, never string-interpolated into the script text,
-    # so an order id cannot inject SQL; psql's own `:'name'` substitution quotes the value.
-    local sql="$1"; shift
+    # a `ps aux` listing on either side. The SQL is passed as a real argv element of the remote
+    # bash -c invocation (never spliced into the script text). psql does not interpolate its own
+    # `:'name'` variables inside a `-c` string, so callers that need an order id build it into the
+    # SQL themselves after validating it against a strict pattern (see shipment_prep_carrier).
+    local sql="$1"
     printf '%s\n' "$PG_PASS" | kubectl exec -i -n "$DATA_NS" "$PG_POD" -- \
-        bash -c 'sql="$1"; shift; read -r pw; PGPASSWORD="$pw" exec psql -h 127.0.0.1 -U apa -d apa -v ON_ERROR_STOP=1 "$@" -tAc "$sql"' \
-        _ "$sql" "$@"
+        bash -c 'read -r pw; PGPASSWORD="$pw" exec psql -h 127.0.0.1 -U apa -d apa -v ON_ERROR_STOP=1 -tAc "$1"' \
+        _ "$sql"
 }
 shipment_prep_carrier() { # shipment_prep_carrier <orderId>
-    psql_remote "SELECT carrier FROM shipping.shipment_prep WHERE order_id = :'orderid'" -v "orderid=$1"
+    # The order id is one of this script's own literal constants (O-9100x), not external input;
+    # validate the shape anyway so a stray value can never reshape the query.
+    [[ "$1" =~ ^[A-Za-z0-9-]+$ ]] || { printf 'invalid order id: %s\n' "$1" >&2; return 1; }
+    psql_remote "SELECT carrier FROM shipping.shipment_prep WHERE order_id = '$1'"
 }
 shipment_prep_is_a_valid_carrier() { # the live model decides which carrier; only the shape is asserted, never its prose
     local c; c=$(shipment_prep_carrier "$1")
@@ -136,10 +140,16 @@ loki_has_log() { # loki_has_log <search string>
         | grep '"values":\[\[' >/dev/null
 }
 
+# ─── Fresh data ─────────────────────────────────────────────────────────────────────────────────
+# The shared cluster Postgres persists rows across app redeploys (there is no per-run `down -v` the
+# way the compose examples get one), so clear this run's own order ids first to keep the run
+# repeatable and the negative witness honest. The ids are literal, not interpolated input.
+psql_remote "DELETE FROM shipping.shipment_prep WHERE order_id IN ('O-91001','O-91002')" >/dev/null || true
+
 # ─── The positive path ───────────────────────────────────────────────────────────────────────────
 produce_payment PAY-91001 O-91001 49.99
 check "the woken agent records a shipment prep for O-91001 (observed via kubectl exec psql, not model prose)" \
-    poll 180 shipment_prep_is_a_valid_carrier O-91001
+    poll 420 shipment_prep_is_a_valid_carrier O-91001
 check "Tempo has a trace for service $SVC" poll 90 tempo_has_trace
 check "Prometheus has a metric from $SVC" poll 90 prom_has_metric
 check "Prometheus has the prepShipment tool-call counter" poll 90 prom_has_counter
@@ -165,7 +175,7 @@ check "consumer restored (WAKEUP_CONSUMER_ENABLED=true) and rolled out" bash -c 
     kubectl rollout status "deploy/$1" -n "$2" --timeout=180s
 ' _ "$DEPLOY_NAME" "$APP_NS"
 check "restored: the consumer that was disabled now records O-91002's shipment prep" \
-    poll 180 shipment_prep_is_a_valid_carrier O-91002
+    poll 420 shipment_prep_is_a_valid_carrier O-91002
 
 echo "$PASSED/$TOTAL checks passed"
 

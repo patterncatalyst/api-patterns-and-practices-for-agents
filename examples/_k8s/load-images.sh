@@ -75,7 +75,7 @@ for slug in "${SLUGS[@]}"; do
     image="localhost/apa/${slug}:${TAG}"
     if [[ "$SKIP_BUILD" != "1" ]]; then
         step "build ${image}"
-        docker build -f "examples/${slug}/Containerfile" -t "$image" "$EXAMPLES_DIR" \
+        docker build -f "${EXAMPLES_DIR}/${slug}/Containerfile" -t "$image" "$EXAMPLES_DIR" \
             || fail "docker build failed for ${slug}"
     else
         docker image inspect "$image" >/dev/null 2>&1 \

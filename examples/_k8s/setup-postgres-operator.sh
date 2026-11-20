@@ -113,7 +113,21 @@ if (( ! pg_ready )); then
 fi
 step "Postgres primary is Ready."
 
-# ─── 3. Host NodePort (overlays/minikube owns the manifest) ─────────────────
+# ─── 3. Replicate the app credentials into the application namespace ─────────
+# CloudNativePG creates the `<cluster>-app` credentials Secret in its own
+# namespace (${NS}), but the meshed chapter apps run in the `apa` namespace and
+# Secrets are namespace-scoped, so a Deployment there cannot read it. Copy it
+# across (keys unchanged: username/password/uri/...), stripping the server-set
+# metadata so `kubectl apply` is clean and idempotent. The values travel inside
+# the JSON stream, never on a command line, so nothing leaks to the process
+# table.
+APP_NS="${APP_NS:-apa}"
+step "Replicating ${CLUSTER_NAME}-app credentials into '${APP_NS}'"
+kubectl get secret "${CLUSTER_NAME}-app" -n "$NS" -o json \
+    | jq 'del(.metadata.namespace, .metadata.resourceVersion, .metadata.uid, .metadata.creationTimestamp, .metadata.ownerReferences, .metadata.managedFields)' \
+    | kubectl apply -n "$APP_NS" -f -
+
+# ─── 4. Host NodePort (overlays/minikube owns the manifest) ─────────────────
 
 step "Publishing the Postgres host NodePort"
 kubectl apply -f "${SCRIPT_DIR}/overlays/minikube/postgres-nodeport.yaml"

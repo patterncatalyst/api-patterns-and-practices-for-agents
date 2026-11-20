@@ -99,7 +99,6 @@ spec:
   deployment:
     view_only_mode: false
     service_type: NodePort
-    node_port: ${NP_KIALI}
   external_services:
     istio:
       root_namespace: ${ISTIO_SYSTEM}
