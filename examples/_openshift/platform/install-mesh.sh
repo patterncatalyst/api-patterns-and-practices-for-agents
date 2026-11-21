@@ -13,8 +13,8 @@ PLATFORM="$OPENSHIFT_DIR/platform"
 
 # Pins from the lgtm-crc skill's references/versions.md (2026-10-09 survey).
 # re-survey CSV live at r14b (per package, oc get packagemanifest <pkg> -n openshift-marketplace).
-OSSM_CSV="servicemeshoperator3.v3.4.3"
-KIALI_CSV="kiali-operator.v2.27.5"
+OSSM_CSV="servicemeshoperator3.v3.5.0"
+KIALI_CSV="kiali-operator.v2.33.1"
 
 CANARY=false
 [[ "${1:-}" == "--canary" ]] && CANARY=true

@@ -16,6 +16,6 @@ spec:
   name: servicemeshoperator3
   source: redhat-operators
   sourceNamespace: openshift-marketplace
-  channel: stable-3.4
-  startingCSV: servicemeshoperator3.v3.4.3
+  channel: stable-3.5
+  startingCSV: servicemeshoperator3.v3.5.0
   installPlanApproval: Manual

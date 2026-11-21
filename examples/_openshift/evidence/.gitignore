@@ -1,0 +1,6 @@
+# Captured evidence is a per-run, host-specific artifact (oc/crc output);
+# the run and its results are recorded in _plans/verification-log.md instead.
+# Keep the directory, ignore its captured contents.
+*
+!.gitignore
+!.gitkeep

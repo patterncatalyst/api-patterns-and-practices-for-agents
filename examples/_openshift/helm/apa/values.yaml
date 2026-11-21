@@ -127,9 +127,11 @@ native:
 # examples/17-event-triggered-agent-wakeup's own application.properties pins
 # (quarkus.langchain4j.ollama.chat-model.model-id), so the writer's
 # ShipmentAdvisor AiService gets the exact model it was tested against on
-# every runtime.
+# every runtime. Enabled by default: the final project's event-woken shipping
+# writer (the one service with `ai: true`) is a core part of the mesh, not an
+# opt-in extra, so a plain deploy brings up Ollama and the writer together.
 ai:
-  enabled: false
+  enabled: true
   ollamaImage: "docker.io/ollama/ollama:0.40.16@sha256:a372a1c0d1e15b68e9521189785c3ca17795c26c2356f8b1b10122cfb59ed0d7"
   model: "qwen3:4b-instruct-2507-q4_K_M"
   storage: 10Gi
