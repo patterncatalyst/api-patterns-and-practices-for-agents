@@ -91,6 +91,22 @@ act of generating the response. Typing that boundary, with a schema the model ca
 decode time, is the strongest lever in the map precisely because every other lever only ever reacts
 to text that already exists.
 
+## Build, run, observe
+
+```bash
+./verify.sh
+```
+
+A fresh stack comes up with this service and a local Ollama serving the pinned model, then the same extraction prompt runs five times down each path. The typed path parses into `ExtractedIntent` with its intent in the allowed set on every run, shape-stable because the schema constrains decoding; the untyped path, given the identical system message, drifts and fails the same strict parse on at least one run. The negative witness turns the schema constraint off and watches `/extract/typed` start reporting `parseOk=false`, then restores it and parses cleanly again, so the schema is demonstrably what provides the guarantee. It ends at 11/11.
+
+The test suite runs without Ollama. `mvn -B verify` passes 4/4 against a fixture source (`agent.extraction.model-source=fixture`), so CI exercises both endpoints and the disabled-schema path with no model inference; the live `./verify.sh` run proves the behaviour against a real model.
+
+Try:
+
+- Send a message that states the order id and amount in words rather than digits, and compare the two paths: the typed response keeps the exact record shape while the untyped text rewords itself from run to run.
+- Set `agent.extraction.structured-output-enabled=false`, call `/extract/typed`, and watch the same endpoint return the untyped path's unparseable prose; restore the flag and it parses again.
+- Remove `@JsonProperty(required = true)` from one component of `ExtractedIntent`, rebuild, and watch the grammar stop enforcing that field's presence: the model may omit it, because the derived schema now constrains type-if-present rather than presence.
+
 ## References
 
 - Ollama, *Structured outputs*: [ollama.com/blog/structured-outputs](https://ollama.com/blog/structured-outputs)
