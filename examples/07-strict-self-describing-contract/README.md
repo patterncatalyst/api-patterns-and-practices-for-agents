@@ -16,8 +16,9 @@ order. `quarkus-smallrye-openapi` generates the OpenAPI document from annotation
 that same document, fetched from a live run and checked in verbatim. `verify.sh` fetches the
 served document again on every run and diffs it against the committed file after normalizing
 both to sorted-key JSON (so key order and YAML-vs-JSON formatting never cause a false mismatch):
-any drift between what the code generates today and what was committed fails the run. This is
-the local half of the chapter's drift gate; the full CI version lands at chapter 32.
+any drift between what the code generates today and what was committed fails the run. The same
+check runs again in CI, so a contract that drifts on a teammate's machine fails the build before
+it reaches a reviewer.
 
 ## The negative witness
 

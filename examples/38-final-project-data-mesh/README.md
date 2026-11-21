@@ -93,8 +93,8 @@ PASS 23: mesh-hop witness: restored, the missed event is now consumed and the ro
 23/23 checks passed
 ```
 
-This run is pending an orchestrator cluster lane; `_plans/verification-log.md` and
-`_plans/claims.md` carry the recorded result once it has run live (status `Pending` until then).
+This run was confirmed live on a minikube profile (23/23); `_plans/verification-log.md` and
+`_plans/claims.md` carry the recorded result.
 
 ## Layout
 

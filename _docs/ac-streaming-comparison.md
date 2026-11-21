@@ -19,7 +19,7 @@ An agent-facing surface inherits whatever transport the service behind it speaks
 
 An agent is specifically bad at carrying the weight some transports expect of a caller: holding a socket open, reconnecting on schedule, deduplicating a redelivered callback. A transport choice for an agent-facing API decides how much of that weight a facade absorbs, versus how much lands on the agent itself, which has no session state to carry it in.
 
-{% include excalidraw.html file="ac-streaming-comparison" alt="A decision quadrant placing five transports on two axes, whether the caller pulls on demand or the server pushes continuously, and whether the data is ephemeral or durable and replayable; a raw WebSocket or gRPC stream and a raw webhook callback both point toward the one shape an agent should receive, an MCP tool call or a durable event" caption="Figure AC.1: The axes that place a transport, and the shape an agent gets" %}
+{% include excalidraw.html file="ac-streaming-comparison" alt="A decision quadrant placing five transports on two axes, whether the caller pulls on demand or the server pushes continuously, and whether the data is ephemeral or durable and replayable; a raw WebSocket or gRPC stream and a raw webhook callback both point toward the one shape an agent should receive, an MCP tool call or a durable event" caption="Figure C.1: The axes that place a transport, and the shape an agent gets" %}
 
 ## Five shapes, one question each
 
