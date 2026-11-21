@@ -7,9 +7,24 @@ output: false
 
 # r17 Implementation Plan: the companion decks (the final deliverable)
 
-Status: SCOPE GATED, plan drafted (owner 2026-11-21). Decks-last: this is the final
-deliverable; chapters 00-38 + appendices A-G are content-complete and live-verified
-(r14b/r15/r16).
+Status: DONE (2026-11-21). Three decks built, validated, and ready to ship as r17.0.
+Decks-last: this is the final deliverable; chapters 00-38 + appendices A-G are
+content-complete and live-verified (r14b/r15/r16).
+
+**Result (Wave C validated against the built .pptx, not the executor self-reports):**
+- `apis-for-agents-101-r17.0.pptx`: 28 slides, 28 notes (1:1).
+- `building-agent-apis-r17.0.pptx`: 27 slides, 27 notes (1:1).
+- `running-agent-apis-prod-r17.0.pptx`: 43 slides, 43 notes (1:1).
+- All three: metadata scrubbed (creator "Pattern Catalyst", no "Robert Sedor", no em-dash
+  default title); 0 ban-tier voice across slide text and notes; no em/en dashes; no
+  chapter/slide-number cross-refs in slide-visible text (concept eyebrows only); logo on
+  every slide; references slide crediting every borrowed idea (Hohpe & Woolf, Geewax,
+  Dehghani, the cited RFCs, MCP spec, Anthropic, OTel/Strimzi/Keycloak/Apicurio).
+- Wave C fix: 7 ban-tier phrases in speaker notes (genuinely/deliberately/worth-X) rewritten
+  by the validator; one em-dash in a Deck 2 comment removed. Decks rebuilt after fixes.
+- Diagrams: reused the book's existing SVG figures (converted to PNG), no new authoring
+  needed; covers used the bundled cover panel. `validate.py` 0 warnings; `host_ids check`
+  0 hits repo-wide.
 
 **LOCKED DECISIONS (owner 2026-11-21):**
 1. **3 thematic decks** (matches the WebSockets sibling in this series; each in its own
