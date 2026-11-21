@@ -1,0 +1,76 @@
+{{- if and .Values.postgres.enabled .Values.postgres.databases }}
+# Per-product databases, mirroring examples/38-final-project-data-mesh/
+# verify.sh's own MESH_DATABASES: each data product's Deployment points its
+# QUARKUS_DATASOURCE_JDBC_URL at its own database (values.yaml), owned by the
+# apa role, so no product's Deployment can reach another product's data
+# (ch38's domain-ownership rule, Dehghani principle 1).
+#
+# A Helm hook, not a plain Job like ai.yaml's ollama-pull-model: creating a
+# database takes well under a second, and a hook blocks the release until it
+# completes, which guarantees every database below exists before deploy.sh's
+# `helm upgrade --install` returns and starts polling rollouts (the
+# wait-for-postgres init container only proves the port answers, not that a
+# specific database exists). hook-delete-policy removes the previous run's
+# Job first, so `helm upgrade` never collides with an existing Job name.
+#
+# Additive only: unlike verify.sh's own DROP-then-CREATE reset (which starts
+# every verification run from an empty database and belongs to
+# project-checks.sh, not to a chart install), this Job never drops a
+# database, so an upgrade never discards data a prior run wrote.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-postgres-init-databases
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Release.Name }}-postgres-init-databases
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init-databases
+          image: {{ .Values.postgres.image }}
+          env:
+            # The postgres superuser, reachable from this pod only because
+            # postgres.yaml sets POSTGRESQL_ADMIN_PASSWORD. Read by psql/
+            # createdb from the environment, never passed as a command-line
+            # argument (so it never appears in a `ps aux` listing) and never
+            # printed by this container.
+            - name: PGHOST
+              value: {{ .Release.Name }}-postgres-rw
+            - name: PGUSER
+              value: postgres
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef: {name: {{ .Release.Name }}-postgres-app, key: adminPassword}
+            - name: APP_ROLE
+              valueFrom:
+                secretKeyRef: {name: {{ .Release.Name }}-postgres-app, key: username}
+          command:
+            - bash
+            - -c
+            - |
+              set -euo pipefail
+              for db in {{ .Values.postgres.databases | join " " }}; do
+                if [[ "$(psql -tAc "SELECT 1 FROM pg_database WHERE datname = '${db}'")" == "1" ]]; then
+                  echo "database ${db} already exists"
+                  continue
+                fi
+                createdb --owner="$APP_ROLE" "$db"
+                psql -c "GRANT ALL ON DATABASE \"${db}\" TO \"$APP_ROLE\""
+                psql -c "ALTER DATABASE \"${db}\" OWNER TO \"$APP_ROLE\""
+                echo "created database ${db} owned by $APP_ROLE"
+              done
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {memory: 128Mi}
+          {{- include "chart.containerSecurity" . | nindent 10 }}
+{{- end }}
