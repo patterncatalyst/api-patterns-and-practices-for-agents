@@ -53,6 +53,211 @@ Try:
 - Scale the shipping writer to zero yourself with `kubectl scale` and watch the same gap between a payment and a shipment appear outside the script.
 - Register a backward-incompatible schema version by hand against the registry's own address and watch the same rejection the governance check already proves.
 
+## Exercise the mesh yourself
+
+Run `KEEP=1 ./verify.sh` first, so the mesh and its databases stay up once the script finishes. Every step below drives the same live mesh by hand, over the same NodePorts and the same `kubectl exec`, instead of only reading a pass count.
+
+### 1. Domain ownership: one database per product
+
+```bash
+PG_POD=$(kubectl get pods -n apa-data -l cnpg.io/cluster=apa-postgres,cnpg.io/instanceRole=primary -o jsonpath='{.items[0].metadata.name}')
+PG_PASS=$(kubectl get secret -n apa-data apa-postgres-app -o jsonpath='{.data.password}' | base64 -d)
+
+psql_db() { # psql_db <database> <SQL>: password piped over stdin, SQL as a real argv
+            # element of the remote command, never on a command line anyone could read
+    printf '%s\n' "$PG_PASS" | kubectl exec -i -n apa-data "$PG_POD" -- \
+        bash -c 'read -r pw; PGPASSWORD="$pw" exec psql -h 127.0.0.1 -U apa -d "$1" -v ON_ERROR_STOP=1 -tAc "$2"' \
+        _ "$1" "$2"
+}
+
+psql_db shipping "SELECT order_id, carrier FROM shipping.shipment_prep"
+psql_db orders   "SELECT order_id, carrier FROM shipping.shipment_prep"
+```
+
+The first call lists every row the event-woken writer has recorded so far. The second call runs the identical query against the `orders` database, which also has a schema named `shipping` (its own seeded copy for the composed read), and fails with `relation "shipping.shipment_prep" does not exist`. Same schema name, two different databases, only one of them holding that table.
+
+Domain ownership is a boundary a query can hit, not a label on a diagram. Keep the `psql_db` function defined; the later steps reuse it.
+
+### 2. Data as a product: call each output port directly
+
+```bash
+# orders: the MCP handshake, shown in full once
+curl -sS -D /tmp/mcp-headers.txt -o /tmp/mcp-init.json \
+    -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"reader","version":"1.0"}}}' \
+    http://127.0.0.1:8088/mcp
+
+SESSION=$(grep -i '^mcp-session-id:' /tmp/mcp-headers.txt | tr -d '\r' | cut -d' ' -f2)
+
+curl -sS -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -H "Mcp-Session-Id: $SESSION" \
+    -d '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+    http://127.0.0.1:8088/mcp
+
+curl -sS -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -H "Mcp-Session-Id: $SESSION" \
+    -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"orderStatus","arguments":{"orderId":"O-9001"}}}' \
+    http://127.0.0.1:8088/mcp
+```
+
+The last response's `result.content[0].text` reports `orderStatus: SHIPPED`, `carrier: FASTLINE`, `trackingNumber: FL-778821`, the same seeded composed read the script checks. The handshake, an `initialize` call, the `Mcp-Session-Id` response header carried forward on every call after it, a `notifications/initialized` acknowledgement, then the tool call, is the same for every product; only the base URL, the path and the tool name change.
+
+Repeat it against payments-facade (port 8089, same `/mcp` path) with `takePayment`:
+
+```bash
+curl -sS -D /tmp/mcp-headers.txt -o /tmp/mcp-init.json \
+    -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"reader","version":"1.0"}}}' \
+    http://127.0.0.1:8089/mcp
+SESSION=$(grep -i '^mcp-session-id:' /tmp/mcp-headers.txt | tr -d '\r' | cut -d' ' -f2)
+curl -sS -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -H "Mcp-Session-Id: $SESSION" -d '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+    http://127.0.0.1:8089/mcp
+curl -sS -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -H "Mcp-Session-Id: $SESSION" \
+    -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"takePayment","arguments":{"orderId":"O-50001","amount":"49.99"}}}' \
+    http://127.0.0.1:8089/mcp
+```
+
+The response reports `orderId: O-50001`, `status: COMPLETED`, a write landing in the payments database alone, with no call to any other product.
+
+And against shipping-track (port 8090, path `/mcp/shipping`) with `shipping_track_get`:
+
+```bash
+curl -sS -D /tmp/mcp-headers.txt -o /tmp/mcp-init.json \
+    -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"reader","version":"1.0"}}}' \
+    http://127.0.0.1:8090/mcp/shipping
+SESSION=$(grep -i '^mcp-session-id:' /tmp/mcp-headers.txt | tr -d '\r' | cut -d' ' -f2)
+curl -sS -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -H "Mcp-Session-Id: $SESSION" -d '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+    http://127.0.0.1:8090/mcp/shipping
+curl -sS -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -H "Mcp-Session-Id: $SESSION" \
+    -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"shipping_track_get","arguments":{"orderId":"O-7001"}}}' \
+    http://127.0.0.1:8090/mcp/shipping
+```
+
+The response reports `carrier: FASTLINE`, `trackingNumber: FL-440219`.
+
+A data product's contract is its own output port, never its database. Three handshakes against three different NodePorts prove three independently callable products, not one service wearing three names.
+
+### 3. The agent-driven flow: a payment that wakes a write in another product
+
+```bash
+ORDER_ID="O-50002"
+
+# take the payment through the facade (the same handshake as step 2, port 8089)
+curl -sS -D /tmp/mcp-headers.txt -o /tmp/mcp-init.json \
+    -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"reader","version":"1.0"}}}' \
+    http://127.0.0.1:8089/mcp
+SESSION=$(grep -i '^mcp-session-id:' /tmp/mcp-headers.txt | tr -d '\r' | cut -d' ' -f2)
+curl -sS -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -H "Mcp-Session-Id: $SESSION" -d '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+    http://127.0.0.1:8089/mcp
+curl -sS -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -H "Mcp-Session-Id: $SESSION" \
+    -d "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"takePayment\",\"arguments\":{\"orderId\":\"$ORDER_ID\",\"amount\":\"149.99\"}}}" \
+    http://127.0.0.1:8089/mcp
+
+# stand in for the payments product's async output port: no reused service publishes this event,
+# so produce it directly against the platform's own Kafka NodePort
+printf '%s:{"id":"PAY-DEMO1","orderId":"%s","amount":149.99,"status":"COMPLETED"}\n' "$ORDER_ID" "$ORDER_ID" \
+    | kcat -P -b 127.0.0.1:9092 -t apa.payments.processed -K:
+
+# poll the shipping database for the write the woken agent makes
+until [ -n "$(psql_db shipping "SELECT carrier FROM shipping.shipment_prep WHERE order_id = '$ORDER_ID'")" ]; do
+    sleep 3
+done
+psql_db shipping "SELECT carrier FROM shipping.shipment_prep WHERE order_id = '$ORDER_ID'"
+```
+
+The payment completes in the payments database, the event lands on the topic, and within a few seconds a row for `$ORDER_ID` appears in the shipping database with `carrier` set to `FASTLINE` or `AIRCO`, whichever the live model decided. Assert the shape, never the exact value: the model's own choice can change between runs.
+
+Nothing calls the shipping product directly. The only link between the payment and the write is the Kafka topic; this is the cross-product choreography the mesh exists to prove.
+
+### 4. Federated governance: one compatibility rule across every product
+
+```bash
+GROUP="apa38-demo-$(date +%s)"
+ARTIFACT="apa.audit.agent-action.v2"
+
+# Apicurio's JSON Schema checker only resolves up to the draft-07 dialect, so rewrite
+# $schema before posting
+BASELINE=$(python3 -I -c '
+import json, sys
+with open(sys.argv[1], encoding="utf-8") as f:
+    schema = json.load(f)
+schema["$schema"] = "http://json-schema.org/draft-07/schema#"
+print(json.dumps(json.dumps(schema)))
+' ../../contracts/21-audit-agent-action.schema.json)
+
+curl -sS -X POST "http://127.0.0.1:8081/apis/registry/v3/groups/$GROUP/artifacts" \
+    -H 'Content-Type: application/json' \
+    -d "{\"artifactId\":\"$ARTIFACT\",\"artifactType\":\"JSON\",\"firstVersion\":{\"content\":{\"content\":$BASELINE,\"contentType\":\"application/json\"}}}"
+
+curl -sS -X POST "http://127.0.0.1:8081/apis/registry/v3/groups/$GROUP/artifacts/$ARTIFACT/rules" \
+    -H 'Content-Type: application/json' \
+    -d '{"ruleType":"COMPATIBILITY","config":"BACKWARD"}'
+```
+
+Both calls return the artifact and the rule just registered, `"config":"BACKWARD"` echoed back.
+
+```bash
+COMPATIBLE=$(python3 -I -c 'import json,sys; print(json.dumps(sys.stdin.read()))' <../../contracts/32-audit-agent-action.v2-compatible.schema.json)
+curl -sS -w '\nHTTP %{http_code}\n' -X POST \
+    "http://127.0.0.1:8081/apis/registry/v3/groups/$GROUP/artifacts/$ARTIFACT/versions" \
+    -H 'Content-Type: application/json' \
+    -d "{\"content\":{\"content\":$COMPATIBLE,\"contentType\":\"application/json\"}}"
+```
+
+An added optional field posts clean: HTTP 200 or 201.
+
+```bash
+BREAKING=$(python3 -I -c 'import json,sys; print(json.dumps(sys.stdin.read()))' <../../contracts/32-audit-agent-action.v2-breaking.schema.json)
+curl -sS -w '\nHTTP %{http_code}\n' -X POST \
+    "http://127.0.0.1:8081/apis/registry/v3/groups/$GROUP/artifacts/$ARTIFACT/versions" \
+    -H 'Content-Type: application/json' \
+    -d "{\"content\":{\"content\":$BREAKING,\"contentType\":\"application/json\"}}"
+```
+
+A new required field is rejected: an HTTP 400 with a JSON body whose `name` field reads `RuleViolationException`.
+
+One rule, registered once against the shared registry, rejects the same breaking change coming from any of the three products; nobody has to remember to run a check per product.
+
+### 5. The mesh-hop witness: scale one product down and watch the gap
+
+```bash
+kubectl scale deploy/event-triggered-agent-wakeup -n apa --replicas=0
+kubectl rollout status deploy/event-triggered-agent-wakeup -n apa --timeout=120s
+# Wait until the pod is fully gone before producing the event: a still-terminating
+# consumer would read it during its grace period and the gap would never appear.
+kubectl wait --for=delete pod -l app.kubernetes.io/name=event-triggered-agent-wakeup -n apa --timeout=120s
+
+ORDER_ID="O-50003"
+printf '%s:{"id":"PAY-DEMO2","orderId":"%s","amount":199.99,"status":"COMPLETED"}\n' "$ORDER_ID" "$ORDER_ID" \
+    | kcat -P -b 127.0.0.1:9092 -t apa.payments.processed -K:
+
+psql_db shipping "SELECT carrier FROM shipping.shipment_prep WHERE order_id = '$ORDER_ID'"
+```
+
+The query returns nothing. The order is paid, the event is sitting on the topic, and there is no shipment for it, paid but unshipped.
+
+```bash
+kubectl scale deploy/event-triggered-agent-wakeup -n apa --replicas=1
+kubectl rollout status deploy/event-triggered-agent-wakeup -n apa --timeout=180s
+
+until [ -n "$(psql_db shipping "SELECT carrier FROM shipping.shipment_prep WHERE order_id = '$ORDER_ID'")" ]; do
+    sleep 3
+done
+psql_db shipping "SELECT carrier FROM shipping.shipment_prep WHERE order_id = '$ORDER_ID'"
+```
+
+Once the writer is back, it reads the event it missed and the row appears.
+
+The gap is isolated to the one deployment that was down. Every other product, and the event itself, stays untouched; restoring one piece recovers the whole hop.
+
 ## Anti-patterns
 
 - **One shared database behind three products.** A single schema a payments write and a shipping write can both reach erases the boundary domain ownership is supposed to draw; the visible symptom is a migration history collision, or worse, a quiet cross-product write nothing rejects.
