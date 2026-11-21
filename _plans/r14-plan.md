@@ -7,7 +7,14 @@ output: false
 
 # r14 Implementation Plan: Appendix B, running the final project's data products on OpenShift Local (CRC)
 
-Status: DRAFT, pending owner approval. The last appendix. Demonstrates the SAME neutral code (ch38's data mesh) running on an on-premises OpenShift distribution, with OpenShift-native mechanisms only in a new `examples/_openshift/` layer. Uses the `lgtm-crc` skill conventions. All house gates apply; appendix doc is spine-exempt and xref-exempt.
+Status: APPROVED with decisions (owner 2026-11-21). The last appendix.
+
+**LOCKED DECISIONS (owner 2026-11-21):**
+1. **SPLIT r14a / r14b.** r14a = scaffold `examples/_openshift/` + offline gates (clean checkpoint). r14b = orchestrator runs the live CRC lane + the appendix chapter.
+2. **Full ch38 mesh on the core tier:** all 3 products / 5 deployments + Kafka + per-product Postgres + Ollama + Apicurio, running ch38's full end-to-end scenario on OpenShift.
+3. **Attempt the OSSM mesh platform tier live too** in r14b (OpenShift Service Mesh 3 + Kiali), beyond the core tier. Scripts for KEDA / RH OTel / GitOps are shipped and documented as opt-in; the mesh tier is verified live if the core tier lands (fall back to documented-not-verified if the mesh tier blocks, per the datamesh precedent, never faked).
+4. **Orchestrator runs the live CRC lane** (CRC is set up, pull secret present; ~60-90 min including `crc start`).
+5. Placement `examples/_openshift/` (beside `examples/_k8s`); Keycloak omitted from the core tier (not exercised by the scenario). Appendix doc `_docs/ab-openshift-local.md`, order 40. Demonstrates the SAME neutral code (ch38's data mesh) running on an on-premises OpenShift distribution, with OpenShift-native mechanisms only in a new `examples/_openshift/` layer. Uses the `lgtm-crc` skill conventions. All house gates apply; appendix doc is spine-exempt and xref-exempt.
 
 ## Environment (confirmed 2026-11-21)
 CRC 2.64.0 / OpenShift 4.22.14 (exactly the `lgtm-crc` verified version), VM Stopped, bundle cached (no re-download), pull secret configured (free Red Hat registration, never printed/committed), sized 12 cpu / 32 GB / 100 GB (platform-tier sizing), on a 22-core / 62 GB host. `oc`, `helm`, `skopeo` present. minikube `apa` Stopped (one cluster at a time). Live CRC verification is feasible.
