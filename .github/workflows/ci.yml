@@ -71,7 +71,7 @@ jobs:
         run: |
           shopt -s nullglob
           poms=()
-          for p in examples/domain-model/pom.xml examples/*/pom.xml examples/a[a-e]-*/pom.xml; do
+          for p in examples/domain-model/pom.xml examples/*/pom.xml examples/a[a-g]-*/pom.xml; do
             [[ -f "$p" ]] && poms+=("$p")
           done
           if [[ ${#poms[@]} -eq 0 ]]; then
@@ -92,7 +92,7 @@ jobs:
         if: steps.poms.outputs.has_poms == 'true'
         run: |
           shopt -s nullglob
-          for p in examples/*/pom.xml examples/a[a-e]-*/pom.xml; do
+          for p in examples/*/pom.xml examples/a[a-g]-*/pom.xml; do
             [[ "$p" == examples/domain-model/pom.xml ]] && continue
             echo "==> mvn -B verify ($p)"
             (cd "$(dirname "$p")" && mvn -B verify)

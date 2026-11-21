@@ -66,7 +66,7 @@ XREF_SOURCE_RE = re.compile(
     r"\*[A-Z][^*]+\*,? (ch|chapter)", re.I)
 SELFREF_RE = re.compile(r"\b(this|the) (chapter|section)\b|\bthe example shows\b|\bwe will\b", re.I)
 K8S_SETUP_HEADING = "## Setting up the cluster"
-EXAMPLE_DIR_RE = re.compile(r"(\d+|a[a-e])-")
+EXAMPLE_DIR_RE = re.compile(r"(\d+|a[a-g])-")  # numbered chapters and appendix examples aa- through ag-
 
 FORWARDING = re.compile(
     r"port-forward|minikube\s+tunnel|\bssh\s+(?:\S+\s+)*-[LRD]\b|ip_forward|\biptables\b|\bnft\b|"
@@ -557,7 +557,7 @@ def check_examples(rep: Report):
 
     IMG_RE = re.compile(r"^\s*-?\s*image:\s*(\S+)", re.M)
     for c in files(rep.root, "examples/**/compose*.yaml", "examples/**/compose*.yml",
-                   "examples/_k8s/**/*.yaml", "examples/[0-9]*/**/*.yaml", "examples/a[a-e]-*/**/*.yaml"):
+                   "examples/_k8s/**/*.yaml", "examples/[0-9]*/**/*.yaml", "examples/a[a-g]-*/**/*.yaml"):
         if "/target/" in c.as_posix():
             continue
         text = c.read_text(encoding="utf-8")
@@ -652,6 +652,12 @@ def self_test() -> int:
         f"| row {i} alpha beta gamma delta | epsilon zeta eta theta |\n" for i in range(200))
     results.append(("chapter_words excludes markdown table rows from the prose count",
                     chapter_words(_tbl_doc) < 20, [f"counted {chapter_words(_tbl_doc)} (expected < 20)"]))
+    # EXAMPLE_DIR_RE recognizes appendix example dirs aa- through ag- (F=af-, G=ag-), and a numbered
+    # chapter dir, but not an out-of-range letter or a non-appendix dir.
+    _in = all(EXAMPLE_DIR_RE.match(n) for n in ("aa-x", "af-deterministic", "ag-structured", "13-demo"))
+    _out = not any(EXAMPLE_DIR_RE.match(n) for n in ("ah-x", "az-x", "api-foo", "_k8s"))
+    results.append(("EXAMPLE_DIR_RE covers appendix dirs af-/ag- and rejects out-of-range/non-appendix",
+                    _in and _out, [f"in={_in} out={_out}"]))
     with tempfile.TemporaryDirectory() as tmp:
         def build(name: str) -> Path:
             r = Path(tmp) / name
