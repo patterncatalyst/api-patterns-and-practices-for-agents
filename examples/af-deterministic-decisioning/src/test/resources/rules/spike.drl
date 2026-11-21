@@ -1,0 +1,13 @@
+package com.patterncatalyst.agentapi.afdeterministicdecisioning.spike;
+
+import com.patterncatalyst.agentapi.afdeterministicdecisioning.SpikeFact;
+
+dialect "mvel"
+
+rule "spike-fires"
+    when
+        $f : SpikeFact( fired == false )
+    then
+        $f.setFired(true);
+        update($f);
+end

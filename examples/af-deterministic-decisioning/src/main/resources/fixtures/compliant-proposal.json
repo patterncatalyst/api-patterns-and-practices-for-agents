@@ -1,0 +1,8 @@
+{
+  "orderId": "O-AF9001",
+  "customerId": "CUST-AF9001",
+  "orderStatus": "PAID",
+  "orderPaidAmount": 200.00,
+  "refundAmount": 150.00,
+  "reason": "DAMAGED_IN_TRANSIT"
+}
