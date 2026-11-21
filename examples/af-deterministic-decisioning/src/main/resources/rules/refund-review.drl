@@ -1,0 +1,51 @@
+package com.patterncatalyst.agentapi.afdeterministicdecisioning.rules;
+
+// The committed decision rule this appendix is about: the same refund-review decision
+// ch26-decision-rule-review reimplements as a hand-rolled JSON-rule evaluator, rebuilt here as an
+// ordered Drools ruleset. The three clauses are identical in substance and in id to ch26's
+// contracts/26-refund-review-rule.json: the refund amount must not exceed the order's paid
+// amount, the order's own status must still be refundable, and the stated reason must be one of
+// an allowed set. salience orders them so the first clause a proposal fails, in that order, is
+// the one RefundReviewer reads back as the recorded failedClause; the `failedClause == null`
+// guard on every rule stops a lower-salience clause from overwriting a verdict a higher-salience
+// one already rejected.
+
+import com.patterncatalyst.agentapi.afdeterministicdecisioning.RefundProposal;
+import com.patterncatalyst.agentapi.afdeterministicdecisioning.Verdict;
+import com.patterncatalyst.agentapi.afdeterministicdecisioning.Verdict.Decision;
+
+dialect "mvel"
+
+rule "amount-exceeds-paid"
+    salience 30
+    when
+        $v : Verdict( failedClause == null )
+        RefundProposal( refundAmount > orderPaidAmount )
+    then
+        $v.setDecision(Decision.REJECT);
+        $v.setFailedClause("amount-exceeds-paid");
+        update($v);
+end
+
+rule "order-not-refundable"
+    salience 20
+    when
+        $v : Verdict( failedClause == null )
+        RefundProposal( orderStatus not in ("PAID", "SHIPPED") )
+    then
+        $v.setDecision(Decision.REJECT);
+        $v.setFailedClause("order-not-refundable");
+        update($v);
+end
+
+rule "reason-not-allowed"
+    salience 10
+    when
+        $v : Verdict( failedClause == null )
+        RefundProposal( reason not in ("DAMAGED_IN_TRANSIT", "WRONG_ITEM_SHIPPED",
+                "NOT_AS_DESCRIBED", "CUSTOMER_CHANGED_MIND") )
+    then
+        $v.setDecision(Decision.REJECT);
+        $v.setFailedClause("reason-not-allowed");
+        update($v);
+end

@@ -1,0 +1,42 @@
+name: apa-ag
+
+include:
+  - path: ../_infra/compose.yaml
+  - path: ../_infra/compose.lgtm.yaml
+
+services:
+  # The TYPED and UNTYPED paths, /extract/typed and /extract/untyped, both live in this one
+  # service: same model, same system message, same compose service, so the live verify.sh's N-run
+  # shape-versus-drift contrast calls one running container, never two.
+  app:
+    build:
+      context: ..
+      dockerfile: ag-structured-outputs/Containerfile
+    container_name: apa-ag-structured-outputs
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      QUARKUS_LANGCHAIN4J_OLLAMA_BASE_URL: http://ollama:11434
+      # Demo code: the negative witness. Left at its default, /extract/typed calls
+      # TypedIntentExtractor, whose declared return type carries Ollama's format grammar.
+      # Overridden to false, the same endpoint calls UntypedIntentExtractor instead and runs the
+      # same strict parse /extract/untyped always runs, so it can be shown failing to parse.
+      AGENT_EXTRACTION_STRUCTURED_OUTPUT_ENABLED: ${AGENT_EXTRACTION_STRUCTURED_OUTPUT_ENABLED:-true}
+    depends_on:
+      ollama:
+        condition: service_healthy
+      lgtm:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks: [apa]
+
+networks:
+  apa:
+    name: apa

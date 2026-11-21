@@ -1,0 +1,35 @@
+package com.patterncatalyst.agentapi.afdeterministicdecisioning.rules;
+
+// The negative witness, committed only for this purpose and never the default: the same ruleset
+// as refund-review.drl with the "amount-exceeds-paid" rule removed. Pointed at this file and
+// asked to review the exact same over-limit proposal, RefundReviewer wrongly approves it, proving
+// that rule, not some other property of the proposal, is what was catching the over-refund.
+
+import com.patterncatalyst.agentapi.afdeterministicdecisioning.RefundProposal;
+import com.patterncatalyst.agentapi.afdeterministicdecisioning.Verdict;
+import com.patterncatalyst.agentapi.afdeterministicdecisioning.Verdict.Decision;
+
+dialect "mvel"
+
+rule "order-not-refundable"
+    salience 20
+    when
+        $v : Verdict( failedClause == null )
+        RefundProposal( orderStatus not in ("PAID", "SHIPPED") )
+    then
+        $v.setDecision(Decision.REJECT);
+        $v.setFailedClause("order-not-refundable");
+        update($v);
+end
+
+rule "reason-not-allowed"
+    salience 10
+    when
+        $v : Verdict( failedClause == null )
+        RefundProposal( reason not in ("DAMAGED_IN_TRANSIT", "WRONG_ITEM_SHIPPED",
+                "NOT_AS_DESCRIBED", "CUSTOMER_CHANGED_MIND") )
+    then
+        $v.setDecision(Decision.REJECT);
+        $v.setFailedClause("reason-not-allowed");
+        update($v);
+end
