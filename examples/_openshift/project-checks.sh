@@ -104,7 +104,7 @@ mcp_rpc() { # mcp_rpc <base_url> <path> <session-id> <json-body>
 mcp_initialize() { # mcp_initialize <base_url> <path>: prints "<session-id> <protocol-revision>"
     local base="$1" path="$2" header_file body_file status session revision
     header_file=$(mktemp); body_file=$(mktemp)
-    trap 'rm -f "$header_file" "$body_file"' RETURN
+    trap 'rm -f "$header_file" "$body_file"; trap - RETURN' RETURN
     status=$(https -D "$header_file" -o "$body_file" -w '%{http_code}' \
         -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
         -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"project-checks.sh","version":"1.0.0"}}}' \
@@ -121,7 +121,7 @@ orders_order_status_composed() {
     local base session revision f
     base="$(route_url orders)"
     read -r session revision < <(mcp_initialize "$base" "/mcp") || return 1
-    f=$(mktemp); trap 'rm -f "$f"' RETURN
+    f=$(mktemp); trap 'rm -f "$f"; trap - RETURN' RETURN
     mcp_rpc "$base" "/mcp" "$session" \
         '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"orderStatus","arguments":{"orderId":"O-9001"}}}' > "$f"
     jq -e '.result.content[0].text | fromjson
@@ -133,7 +133,7 @@ payments_take_payment_succeeds() {
     local base session revision f
     base="$(route_url payments-facade)"
     read -r session revision < <(mcp_initialize "$base" "/mcp") || return 1
-    f=$(mktemp); trap 'rm -f "$f"' RETURN
+    f=$(mktemp); trap 'rm -f "$f"; trap - RETURN' RETURN
     mcp_rpc "$base" "/mcp" "$session" \
         "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"takePayment\",\"arguments\":{\"orderId\":\"${ORDER_1}\",\"amount\":\"49.99\"}}}" \
         > "$f"
@@ -148,7 +148,7 @@ shipping_track_get_returns_seeded_tracking() {
     local base session revision f
     base="$(route_url shipping-track)"
     read -r session revision < <(mcp_initialize "$base" "/mcp/shipping") || return 1
-    f=$(mktemp); trap 'rm -f "$f"' RETURN
+    f=$(mktemp); trap 'rm -f "$f"; trap - RETURN' RETURN
     mcp_rpc "$base" "/mcp/shipping" "$session" \
         '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"shipping_track_get","arguments":{"orderId":"O-7001"}}}' > "$f"
     jq -e '.result.content[0].text | fromjson | .carrier == "FASTLINE" and .trackingNumber == "FL-440219"' "$f" >/dev/null

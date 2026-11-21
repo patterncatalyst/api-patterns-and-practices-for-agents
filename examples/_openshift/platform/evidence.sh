@@ -35,8 +35,20 @@ evidence_mesh() {
     # Meshed pods carry the istio.io/rev label on the pod template.
     meshed_apps() { oc get pods -n "$NS" -l "app.kubernetes.io/part-of=$PROJECT,istio.io/rev" \
         -o jsonpath='{range .items[*]}{.metadata.labels.app\.kubernetes\.io/name}{"\n"}{end}' 2>/dev/null | sort -u; }
-    target="$(meshed_apps | head -1)"
-    [[ -n "$target" ]] || target="${SERVICES[0]}"
+    # The Route-facing services carry a workload PERMISSIVE PeerAuthentication so the
+    # OpenShift router, which is outside the mesh, can reach them (a STRICT workload
+    # answers a Route request with a 502). STRICT is enforced on the internal services,
+    # so probe one of those, never a Route-facing one, or the plaintext call would
+    # legitimately succeed and this check would misread it as STRICT not enforced.
+    local permissive
+    permissive="$(oc get peerauthentication -n "$NS" \
+        -o jsonpath='{range .items[?(@.spec.mtls.mode=="PERMISSIVE")]}{.spec.selector.matchLabels.app\.kubernetes\.io/name}{"\n"}{end}' 2>/dev/null)"
+    if [[ -n "$permissive" ]]; then
+        target="$(meshed_apps | grep -vxF "$permissive" | head -1)"
+    else
+        target="$(meshed_apps | head -1)"
+    fi
+    [[ -n "$target" ]] || target="payment-service"
     {
         oc get istio default -o jsonpath='Istio {.spec.version}, revision {.status.activeRevisionName}, Ready={.status.conditions[?(@.type=="Ready")].status}{"\n"}'
         oc get csv -n openshift-operators -o custom-columns='CSV:.metadata.name,PHASE:.status.phase' | grep -E 'CSV|servicemesh|kiali'

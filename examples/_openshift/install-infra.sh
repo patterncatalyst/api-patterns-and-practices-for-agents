@@ -17,7 +17,7 @@ ENABLE_KAFKA="${ENABLE_KAFKA:-true}"
 # re-survey CSV live at r14b: oc get packagemanifest amq-streams -n openshift-marketplace \
 #     -o jsonpath='{range .status.channels[*]}{.name}{"  "}{.currentCSV}{"\n"}{end}'
 # and update infra/amq-streams-subscription.yaml to match.
-CSV="amqstreams.v3.2.1-14"
+CSV="amqstreams.v3.2.2-9"
 
 require_crc
 

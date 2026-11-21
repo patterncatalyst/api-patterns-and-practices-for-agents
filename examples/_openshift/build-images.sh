@@ -53,12 +53,15 @@ mvn -B -q -ntp -f "$DOMAIN_MODEL_DIR/pom.xml" install -DskipTests \
 ok "domain-model installed"
 
 step "Building ${#targets[@]} image(s) in-cluster: ${targets[*]}"
-# quarkus.container-image.name forces the ImageStream name to the chart's
-# service key: every module's own Maven artifactId differs from its data-mesh
-# product name (e.g. module 15's mcp-facade artifactId is
-# reshape-grpc-behind-facade-mcp-facade, deployed here as payments-facade),
-# so the extension's default (artifactId) would not match what the Helm
-# chart looks up. quarkus.openshift.version sets the BuildConfig's output
+# quarkus.openshift.name forces the BuildConfig and ImageStream name to the
+# chart's service key: the quarkus-openshift extension names those after
+# quarkus.openshift.name (default: the Maven artifactId), NOT after
+# quarkus.container-image.name. Every module's artifactId differs from its
+# data-mesh product name (e.g. module 15's mcp-facade is deployed here as
+# payments-facade), so without the override the ImageStream (artifactId)
+# would not match what the Helm chart looks up. quarkus.container-image.name
+# is set to the same value for the pushed image coordinates.
+# quarkus.openshift.version sets the BuildConfig's output
 # tag; with quarkus.container-image.tag alone it stays at the project
 # version (e.g. 1.0.0-SNAPSHOT). kubernetes.deploy=false: build and push
 # only, the Helm chart owns the Deployments. quarkus.openshift.namespace is
@@ -72,6 +75,7 @@ for svc in "${targets[@]}"; do
     ( cd "$dir" && mvn -B -q -ntp package -DskipTests -Popenshift \
         -Dquarkus.container-image.build=true \
         -Dquarkus.container-image.name="$svc" \
+        -Dquarkus.openshift.name="$svc" \
         -Dquarkus.container-image.tag="$IMAGE_TAG" \
         -Dquarkus.openshift.version="$IMAGE_TAG" \
         -Dquarkus.openshift.base-jvm-image="$BASE_JVM_IMAGE" \
