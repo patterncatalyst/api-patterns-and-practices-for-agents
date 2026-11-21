@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 620" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="50" width="150" height="510" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="70" font-size="12" font-weight="700" fill="#888">Foundations</text>
+<rect x="190" y="50" width="430" height="510" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="202" y="70" font-size="12" font-weight="700" fill="#888">Build</text>
+<rect x="640" y="50" width="190" height="510" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="652" y="70" font-size="12" font-weight="700" fill="#888">Consume</text>
+<rect x="850" y="50" width="190" height="510" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="862" y="70" font-size="12" font-weight="700" fill="#888">Test</text>
+<rect x="1060" y="50" width="150" height="510" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="1072" y="70" font-size="12" font-weight="700" fill="#888">Ship</text>
+<rect x="1230" y="50" width="150" height="510" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="1242" y="70" font-size="12" font-weight="700" fill="#888">Run</text>
+<rect x="32" y="110" width="126" height="150" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="95.0" y="153.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Foundations</text>
+<text x="95.0" y="170.0" font-size="11.5" fill="#555555" text-anchor="middle">(00-02)</text>
+<text x="95.0" y="185.0" font-size="11.5" fill="#555555" text-anchor="middle">two stacks,</text>
+<text x="95.0" y="200.0" font-size="11.5" fill="#555555" text-anchor="middle">five pressures,</text>
+<text x="95.0" y="215.0" font-size="11.5" fill="#555555" text-anchor="middle">pattern form,</text>
+<text x="95.0" y="230.0" font-size="11.5" fill="#555555" text-anchor="middle">seven forces</text>
+<rect x="202" y="90" width="406" height="130" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="405.0" y="138.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Build: sync APIs (03-11)</text>
+<text x="405.0" y="155.0" font-size="11.5" fill="#555555" text-anchor="middle">Intent Endpoint, Search over Pagination,</text>
+<text x="405.0" y="170.0" font-size="11.5" fill="#555555" text-anchor="middle">Idempotency, Strict Contract,</text>
+<text x="405.0" y="185.0" font-size="11.5" fill="#555555" text-anchor="middle">Propose/Preview/Commit</text>
+<rect x="202" y="240" width="406" height="130" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="405.0" y="288.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Build: MCP packaging (12-16)</text>
+<text x="405.0" y="305.0" font-size="11.5" fill="#555555" text-anchor="middle">MCP-First Single Bean, Package as Tools,</text>
+<text x="405.0" y="320.0" font-size="11.5" fill="#555555" text-anchor="middle">Domain-Split Discovery,</text>
+<text x="405.0" y="335.0" font-size="11.5" fill="#555555" text-anchor="middle">Securing and Gating MCP Tools</text>
+<rect x="202" y="390" width="406" height="130" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="405.0" y="438.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Build: async APIs (17-21)</text>
+<text x="405.0" y="455.0" font-size="11.5" fill="#555555" text-anchor="middle">Event-Triggered Wakeup, Choreography,</text>
+<text x="405.0" y="470.0" font-size="11.5" fill="#555555" text-anchor="middle">Human-in-the-Loop Gate,</text>
+<text x="405.0" y="485.0" font-size="11.5" fill="#555555" text-anchor="middle">Long-Running Workflow, Replayable Audit</text>
+<rect x="655" y="160" width="162" height="240" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="736.0" y="248.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Consume (22-26)</text>
+<text x="736.0" y="265.0" font-size="11.5" fill="#555555" text-anchor="middle">Claude Code,</text>
+<text x="736.0" y="280.0" font-size="11.5" fill="#555555" text-anchor="middle">Claude Code Skill,</text>
+<text x="736.0" y="295.0" font-size="11.5" fill="#555555" text-anchor="middle">LangChain4j Consumer,</text>
+<text x="736.0" y="310.0" font-size="11.5" fill="#555555" text-anchor="middle">Consuming Async,</text>
+<text x="736.0" y="325.0" font-size="11.5" fill="#555555" text-anchor="middle">Decision-Rule Review</text>
+<rect x="865" y="160" width="162" height="240" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="946.0" y="248.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Test (27-30)</text>
+<text x="946.0" y="265.0" font-size="11.5" fill="#555555" text-anchor="middle">Contract and Manifest</text>
+<text x="946.0" y="280.0" font-size="11.5" fill="#555555" text-anchor="middle">Conformance,</text>
+<text x="946.0" y="295.0" font-size="11.5" fill="#555555" text-anchor="middle">Behaviour Eval,</text>
+<text x="946.0" y="310.0" font-size="11.5" fill="#555555" text-anchor="middle">Scripted and Async</text>
+<text x="946.0" y="325.0" font-size="11.5" fill="#555555" text-anchor="middle">plus HITL tests</text>
+<rect x="1075" y="210" width="122" height="140" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="1136.0" y="263.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Ship (31-32)</text>
+<text x="1136.0" y="280.0" font-size="11.5" fill="#555555" text-anchor="middle">Publish Tool</text>
+<text x="1136.0" y="295.0" font-size="11.5" fill="#555555" text-anchor="middle">Surface,</text>
+<text x="1136.0" y="310.0" font-size="11.5" fill="#555555" text-anchor="middle">CI Gates</text>
+<rect x="1245" y="160" width="122" height="240" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="1306.0" y="240.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Run (33-38)</text>
+<text x="1306.0" y="257.5" font-size="11.5" fill="#555555" text-anchor="middle">Observability,</text>
+<text x="1306.0" y="272.5" font-size="11.5" fill="#555555" text-anchor="middle">Auditing,</text>
+<text x="1306.0" y="287.5" font-size="11.5" fill="#555555" text-anchor="middle">Identity and Traffic</text>
+<text x="1306.0" y="302.5" font-size="11.5" fill="#555555" text-anchor="middle">Guardrails,</text>
+<text x="1306.0" y="317.5" font-size="11.5" fill="#555555" text-anchor="middle">Kubernetes,</text>
+<text x="1306.0" y="332.5" font-size="11.5" fill="#555555" text-anchor="middle">Final Project</text>
+<path d="M158,160 L202,150" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="186.0" y="149.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">pattern form + forces</text>
+<text x="186.0" y="149.0" font-size="11" fill="#555" text-anchor="middle">pattern form + forces</text>
+<path d="M608,150 L865,220" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="742.5" y="179.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">07/27 contract -&gt; conformance</text>
+<text x="742.5" y="179.0" font-size="11" fill="#555" text-anchor="middle">07/27 contract -&gt; conformance</text>
+<path d="M405,220 L405,390" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="411.0" y="299.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">11/19 preview -&gt; gate</text>
+<text x="411.0" y="299.0" font-size="11" fill="#555" text-anchor="middle">11/19 preview -&gt; gate</text>
+<path d="M608,430 L655,270" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="637.5" y="344.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">19/26 human or rule</text>
+<text x="637.5" y="344.0" font-size="11" fill="#555" text-anchor="middle">19/26 human or rule</text>
+<path d="M608,465 L655,350" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="637.5" y="401.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">17/25 same wakeup, consuming side</text>
+<text x="637.5" y="401.5" font-size="11" fill="#555" text-anchor="middle">17/25 same wakeup, consuming side</text>
+<path d="M608,500 L865,300" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="742.5" y="394.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">21/28 structured signals only</text>
+<text x="742.5" y="394.0" font-size="11" fill="#555" text-anchor="middle">21/28 structured signals only</text>
+<path d="M608,300 L1245,260" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="932.5" y="274.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">16/35 role+scope -&gt; assurance</text>
+<text x="932.5" y="274.0" font-size="11" fill="#b8650a" text-anchor="middle">16/35 role+scope -&gt; assurance</text>
+<path d="M1197,280 L1245,300" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="1227.0" y="284.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">31-32/33-36 gated before production</text>
+<text x="1227.0" y="284.0" font-size="11" fill="#b8650a" text-anchor="middle">31-32/33-36 gated before production</text>
+<text x="700" y="24" font-size="15" fill="#444444" text-anchor="middle" font-weight="700">Appendix D: how the catalog&#x27;s 34 patterns compose across the lifecycle</text>
+<text x="700" y="608" font-size="11" fill="#555555" text-anchor="middle">Each edge names the two chapters it connects; the full relationship list is the pattern map table.</text>
+</svg>
