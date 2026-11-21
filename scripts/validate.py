@@ -47,10 +47,11 @@ DASH_RE = re.compile("[—–]")
 VERSION_RE = re.compile(r"(?<![\d.])\d+\.\d+\.\d+(?!\.?\d)")
 URL_RE = re.compile(r"https?://\S+")
 TESTNAME_RE = re.compile(r"@Test\b|\b[A-Z]\w*[a-z0-9](?:Test|IT)\b|\bshould[A-Z]\w+")
-# Owner rule: every page stands alone. No reference to another chapter, appendix or part of this
-# book in prose (back or forward); related pages are linked only under `## References`. Appendix D
-# (the pattern map and cross-reference) is exempt. Chapter numbers of other books, cited as sources,
-# are allowed.
+# Owner rule: every chapter page stands alone. No reference to another chapter, appendix or part of
+# this book in prose (back or forward); related pages are linked only under `## References`. Every
+# appendix page (basename starting with 'a') is exempt, not only Appendix D: appendices are reference
+# material that maps, translates or builds on the chapters (see check_chapters, which skips the xref
+# check for 'a*' files). Chapter numbers of other books, cited as sources, are allowed.
 XREF_RE = re.compile(r"\b(chapters?|appendix|appendices|parts?)\s+(\d+|[A-E])\b|\]\(\{\{\s*'/docs/|\]\(/docs/|\]\(\.\./docs/", re.I)
 XREF_WORD_RE = re.compile(
     r"\b(?:the\s+)?(?:previous|preceding|prior|next|following|earlier|later|last|first)\s+(?:chapters?|appendix|appendices|parts?)\b"

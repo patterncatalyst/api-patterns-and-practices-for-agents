@@ -50,7 +50,7 @@ sdk install quarkus
 java -version && mvn -version && jbang version && quarkus version
 ```
 
-Every service this book ships builds inside its own UBI 10 image, so the host
+Every service builds inside its own UBI 10 image, so the host
 never needs a JDK to run an example: `./verify.sh` builds the service with
 `docker compose build`, which runs Maven inside the image, not on the host.
 The host JDK, Maven, JBang and the Quarkus CLI exist for a different job:
