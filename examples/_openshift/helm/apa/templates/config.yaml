@@ -1,0 +1,33 @@
+# Shared env contract. Only the ConfigMap lives in this file: the pod
+# checksum hashes it, and must not hash the generated Secret (secret.yaml),
+# which re-renders randomly under helm template (Argo CD).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-app-config
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+data:
+  QUARKUS_PROFILE: "prod"
+  JAVA_OPTS_APPEND: "-Duser.timezone=UTC"
+  JAVA_MAX_MEM_RATIO: {{ .Values.javaMaxMemRatio | quote }}
+  {{- if .Values.kafka.enabled }}
+  KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.kafka.cluster }}-kafka-bootstrap:9092"
+  # Camel's kafka component reads this name directly (examples/17-event-
+  # triggered-agent-wakeup's own compose.yaml and application.properties),
+  # exactly as examples/_k8s/base/config.yaml sets it for the other runtime.
+  CAMEL_COMPONENT_KAFKA_BROKERS: "{{ .Values.kafka.cluster }}-kafka-bootstrap:9092"
+  {{- end }}
+  {{- if .Values.postgres.enabled }}
+  QUARKUS_DATASOURCE_JDBC_URL: "jdbc:postgresql://{{ .Release.Name }}-postgres-rw:5432/{{ .Values.postgres.database }}"
+  {{- end }}
+  {{- if .Values.observability.enabled }}
+  # Every service's own native quarkus-opentelemetry SDK (see values.yaml's
+  # `instrument: false` on every service: the operator's injected Java agent
+  # is not used here) exports straight to otel-lgtm, the same env var name
+  # examples/_k8s/base/config.yaml sets for the other Kubernetes runtime.
+  QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: "http://lgtm:4318"
+  {{- end }}
+  {{- range $k, $v := .Values.config }}
+  {{ $k }}: {{ $v | quote }}
+  {{- end }}

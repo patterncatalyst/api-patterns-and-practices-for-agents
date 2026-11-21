@@ -115,4 +115,20 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- Appendix B (OpenShift Local / CRC): active only with -Popenshift, so `mvn verify` and
+         every other runtime's image are unchanged. quarkus-openshift generates the BuildConfig
+         for the in-cluster binary S2I build (examples/_openshift/build-images.sh);
+         quarkus-container-image-openshift alone would not. -->
+    <profile>
+      <id>openshift</id>
+      <dependencies>
+        <dependency>
+          <groupId>io.quarkus</groupId>
+          <artifactId>quarkus-openshift</artifactId>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 </project>
