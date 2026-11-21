@@ -7,7 +7,12 @@ output: false
 
 # r15 Implementation Plan: the retro (quality sweep before the decks)
 
-Status: DRAFT, pending owner approval. No new content. A regression and quality pass across the whole book (chapters 00-38 + appendices A-G, 40 example `verify.sh` lanes, the minikube `examples/_k8s` and CRC `examples/_openshift` layers) before the final deliverable (r16 decks). All house gates apply.
+Status: APPROVED with decisions (owner 2026-11-21). No new content.
+
+**LOCKED DECISIONS (owner 2026-11-21):**
+1. **SPLIT r15a / r15b.** r15a = static quality sweep (deep idiomatic + voice review, claims audit, xref/bibliography/front-matter check, host scrub), ships first. r15b = the live `verify.sh` re-run, orchestrator-run, owner-gated before it starts.
+2. **r15b scope = TARGETED:** re-run only compose examples whose shared deps (`examples/domain-model`, `examples/_infra`) changed since their last live verification, plus a representative sample per Part; lean on CI's `mvn verify` for the unchanged majority. Clusters (ch37/38 minikube, Appendix B CRC) excluded (verified this session).
+3. **Review depth = full-corpus deep pass** (apply `lgtm-idiomatic-review` + `lgtm-professional-voice`, not just the ban-tier scanners). A regression and quality pass across the whole book (chapters 00-38 + appendices A-G, 40 example `verify.sh` lanes, the minikube `examples/_k8s` and CRC `examples/_openshift` layers) before the final deliverable (r16 decks). All house gates apply.
 
 ## What is already covered (so r15 does not redo it)
 - **CI runs `mvn verify` on every example on every PR** (green as of r14b). The per-example build/test lane is continuously verified; r15 does not need to re-run it manually.
