@@ -14,9 +14,11 @@ deliverable; chapters 00-38 + appendices A-G are content-complete and live-verif
 **LOCKED DECISIONS (owner 2026-11-21):**
 1. **3 thematic decks** (matches the WebSockets sibling in this series; each in its own
    `presentation/<name>/` dir with a `deck.js` builder and a versioned `.pptx`).
-2. **Audience = conference talks.** One idea per slide; diagram or short code callout,
-   not dense code; thick speaker notes as the spoken script. Apply `lgtm-presentation`
-   house conventions plus the `lgtm-presentation-conference` variant.
+2. **Conference pacing, Red Hat house brand.** One idea per slide; diagram or short code
+   callout, not dense code; thick speaker notes as the spoken script. Visual brand is the
+   **`lgtm-presentation`** house style (Red Hat Display/Text/Mono, red #EE0000, logo on
+   every slide), matching the WebSockets and REST sibling decks in this series. NOT the
+   vendor-neutral `lgtm-presentation-conference` variant (owner decision 2026-11-21).
 
 ## The three decks (clean, non-overlapping part boundaries)
 
@@ -98,11 +100,15 @@ production** (Parts 4-7) ending on the final project. No pattern is covered twic
 
 ## Diagrams: reuse first, generate only gaps
 
-The book already ships diagrams under `assets/` and per-chapter figures. Executors
-**mine existing SVG/PNG assets and reuse them** (converted to `png/` per deck) before
-authoring any new Scene. Only concepts with no existing figure get a new `diagrams.py`
-Scene via `dgen.py`. This avoids regenerating what the catalog already has and keeps the
-decks visually consistent with the book. Log which figures were reused vs newly made.
+The book already ships **47 SVG figures** in `assets/diagrams/` (one per chapter 00-38 and
+per appendix aa-ag), a near 1:1 match to the deck slides. Executors **reuse these**: convert
+each needed SVG to PNG with `lgtm-diagram-generator/scripts/svg_to_png.py` (1400px; keeps the
+EIP arrow glyphs that bare cairosvg drops) into the deck's `png/`. Only deck-only concepts
+with no book figure (the three covers, a possible Deck 1 lifecycle-arc overview) get a new
+`diagrams.py` Scene via `dgen.py`. This keeps the decks visually consistent with the book and
+makes Wave A mostly conversion, not authoring. Map of reuse (chapter number -> `NN-*.svg`):
+Deck 1 reuses 00, 01, 02-pattern-form, 02-taxonomy, 13-mcp-triad, 15-reshape-grpc, 38 (teaser);
+Deck 2 reuses 03-21 (all present); Deck 3 reuses 22-38 (all present). Log reused vs new.
 
 ## Waves (lgtm-relay)
 
