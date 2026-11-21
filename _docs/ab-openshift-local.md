@@ -1,6 +1,7 @@
 ---
 title: "Running on OpenShift Local (CRC)"
 order: 40
+marker: "Appendix B"
 part: "Appendices"
 description: "Run the final project's three agent-facing data products and their end-to-end scenario on OpenShift Local, unchanged except for one build profile, with every OpenShift-native mechanism confined to a single scaffolded layer."
 duration: "60 minutes"

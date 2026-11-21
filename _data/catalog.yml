@@ -157,20 +157,30 @@ parts:
     name: "Appendices"
     chapters:
       - number: "A"
+        order: 39
         title: "llms.txt in Depth"
         descriptor: "A deeper, standalone treatment of llms.txt: its syntax, its placement, and how a model actually reads it."
       - number: "B"
+        order: 40
         title: "OpenShift Local (CRC)"
         descriptor: "The final project's data products run again on OpenShift Local, the same neutral code demonstrated on a different platform."
       - number: "C"
+        order: 41
         title: "Streaming Comparison (WebSockets, Webhooks, gRPC)"
         descriptor: "WebSockets, webhooks and gRPC are compared side by side as alternatives to the request/response and event-driven patterns built elsewhere in the catalog."
       - number: "D"
+        order: 42
         title: "Pattern Map and Glossary"
         descriptor: "A pattern map, a glossary and a cross-stack transfer table index every pattern against its Python/FastAPI and Strawberry GraphQL equivalent."
       - number: "E"
+        order: 43
         title: "Building the Consuming Skill in Claude Code, End to End"
         descriptor: "A Claude Code skill for driving this catalog's own services is assembled end to end, from its first prompt to its packaged form."
       - number: "F"
+        order: 44
         title: "Deterministic Decisioning Behind Agent Tools"
         descriptor: "A rules or DMN engine behind a tool makes a business decision deterministic, the concrete answer to trusting a model's own reasoning to enforce it."
+      - number: "G"
+        order: 45
+        title: "Structured Outputs: Typed, Consistent Agent I/O"
+        descriptor: "Grammar-constrained decoding types the one boundary the catalog had not typed yet, the model's own generation, so a typed call returns a fixed shape on every run."

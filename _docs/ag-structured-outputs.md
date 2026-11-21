@@ -1,6 +1,7 @@
 ---
 title: "Structured outputs: typed, consistent agent I/O"
 order: 45
+marker: "Appendix G"
 part: "Appendices"
 description: "Why chasing byte-identical model output is the wrong contract, and how Ollama's grammar-constrained decoding types the one boundary the catalog had not typed yet: the model's own generation."
 duration: "20 minutes"
