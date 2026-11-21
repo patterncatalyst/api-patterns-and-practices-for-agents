@@ -1,6 +1,7 @@
 ---
 title: "llms.txt in depth"
 order: 39
+marker: "Appendix A"
 part: "Appendices"
 description: "A reference on the llms.txt convention: its structure, why a tool surface renders it rather than hand-writes it, and how it differs in purpose from robots.txt, sitemap.xml and OpenAPI."
 duration: "15 minutes"

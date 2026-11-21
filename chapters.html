@@ -27,7 +27,8 @@ permalink: /docs/00-index/
       {%- if site_part.blurb -%}<p class="section-sub">{{ site_part.blurb }}</p>{%- endif -%}
       <ol class="toc-list">
         {%- for chapter in catalog_part.chapters -%}
-        {%- assign doc = site.docs | where: "order", chapter.number | first -%}
+        {%- assign chapter_order = chapter.order | default: chapter.number -%}
+        {%- assign doc = site.docs | where: "order", chapter_order | first -%}
         <li>
           {%- if doc -%}
           <a href="{{ doc.url | relative_url }}">

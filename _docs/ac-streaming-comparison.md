@@ -1,6 +1,7 @@
 ---
 title: "Streaming comparison: WebSockets, webhooks, and gRPC"
 order: 41
+marker: "Appendix C"
 part: "Appendices"
 description: "Five transports for an agent-facing surface, compared on latency, durability and replay, fan-out, ordering, back-pressure, and whether an agent can reasonably consume each through a tool surface."
 duration: "20 minutes"

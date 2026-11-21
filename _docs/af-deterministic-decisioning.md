@@ -1,6 +1,7 @@
 ---
 title: "Deterministic decisioning behind an agent tool"
 order: 44
+marker: "Appendix F"
 part: "Appendices"
 description: "A committed Drools ruleset reimplements the refund-review decision behind an MCP tool, so a rules engine, not the model, decides whether a proposed action takes effect."
 duration: "20 minutes"

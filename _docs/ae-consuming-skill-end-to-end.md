@@ -1,6 +1,7 @@
 ---
 title: "Building the consuming skill end to end"
 order: 43
+marker: "Appendix E"
 part: "Appendices"
 description: "Walking the committed apa-order-ops Claude Code skill from its anatomy through progressive disclosure to confirming it against a live tool surface."
 duration: "20 minutes"
